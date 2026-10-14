@@ -62,6 +62,13 @@
     .receipt { padding: 16px; margin: 18px 0; border-radius: 14px; text-align: left; background: #f1f8e9; border: 1px solid #d1e8cb; font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
     .receipt strong { color: #126b35; }
     .receipt ul { margin: 4px 0 6px; padding-left: 22px; }
+    .receipt-link { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 3px; padding: 12px 10px; border-radius: 12px; background: #0b6a38; color: white; text-decoration: none; font-weight: 800; font-size: 14px; }
+    .receipt-link:hover { background: #094f2c; }
+    .danger-action { display: block; width: 100%; margin: 16px 0 0; padding: 13px; border: 1px solid #d5b4b3; border-radius: 12px; background: #fff2ef; color: #a5262e; font: inherit; font-size: 14px; font-weight: 760; cursor: pointer; }
+    .danger-action:disabled { opacity: .6; cursor: wait; }
+    .event-summary { background: #fff8e4; border-radius: 12px; padding: 12px; margin: 12px 0; text-align: left; color: #365139; font-size: 13px; line-height: 1.7; }
+    .event-summary strong { color: #08602e; }
+
     .tiny { font-size: 12px; line-height: 1.5; color: #777b70; }
     .share-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
     .share-buttons button, .share-buttons a { flex: 1; min-width: 140px; text-align: center; display: inline-flex; align-items: center; justify-content: center; padding: 13px; border-radius: 12px; border: 1px solid #208149; color: #0a662e; text-decoration: none; background: white; font-weight: 800; font-size: 14px; cursor: pointer; }
@@ -102,7 +109,7 @@
         <header class="modal-header">
           <div class="eyebrow">Made in Brasil • 52 anos 🎉</div>
           <h1 id="dialogTitle">Confirme sua presença!</h1>
-          <p class="lead">Informe seu nome e os acompanhantes. Você pode escolher um alimento ou apenas confirmar presença.</p>
+          <p class="lead">Informe seu nome, os acompanhantes e escolha um alimento para levar à festa.</p>
         </header>
         <form id="rsvpForm" autocomplete="on">
           <div class="field">
@@ -116,8 +123,8 @@
           </div>
           <div class="total"><span>Total da confirmação</span><strong id="totalPeople" aria-live="polite">1 pessoa</strong></div>
           <div class="field">
-            <div class="row-title"><span class="field-label" id="foodLabel">O que você vai levar?</span><span class="small-note">Escolha uma opção</span></div>
-            <p class="tiny" style="margin:0">Você pode confirmar agora e deixar o alimento para depois.</p>
+            <div class="row-title"><span class="field-label" id="foodLabel">O que você vai levar?</span><span class="small-note">Escolha obrigatória *</span></div>
+            <p class="tiny" style="margin:0">Escolha um alimento disponível para finalizar a confirmação.</p>
             <div id="foodStatus" class="loading-foods" role="status">Carregando alimentos disponíveis...</div>
             <div id="foodList" class="food-list" role="group" aria-labelledby="foodLabel" hidden></div>
             <button type="button" class="refresh-foods" id="refreshFoodsButton">Atualizar alimentos disponíveis</button>
@@ -141,9 +148,18 @@
       <div class="modal-content success-content" id="successContent" hidden>
         <div class="success-icon" aria-hidden="true">✓</div>
         <h1 id="thanksTitle">Presença confirmada!</h1>
-        <p class="lead">Muito obrigado por confirmar! <strong>Contamos com a sua presença</strong> no sábado, <strong>17/10, a partir das 13 horas</strong>, no Capão da Onça. 🎉</p>
+        <p class="lead">Sua confirmação ficou salva neste navegador. Esperamos você na festa! 🎉</p>
         <div class="receipt" id="receipt" aria-live="polite"></div>
+        <a id="receiptMaps" class="receipt-link" target="_blank" rel="noopener noreferrer">📍 Abrir no Maps</a>
+        <p id="cancelError" class="error" role="alert" hidden></p>
         <button type="button" class="primary" id="finishButton">Fechar e voltar ao convite</button>
+        <button type="button" class="danger-action" id="cancelConfirmation">Não vou mais</button>
+      </div>
+      <div class="modal-content success-content" id="cancelledContent" hidden>
+        <h1>Presença cancelada</h1>
+        <p class="lead">Sua confirmação foi cancelada e a quantidade do alimento voltou à lista de disponíveis. Você não está mais na contagem da festa.</p>
+        <button type="button" class="primary" id="cancelledClose">Voltar ao convite</button>
+        <button type="button" class="secondary" id="confirmAgain">Fazer uma nova confirmação</button>
       </div>
     </section>
   </div>
@@ -166,7 +182,9 @@
     let loadVersion = 0;
     let requestId = null;
     let confirmedEntry = null;
+    let savedEntry = null;
     let submitBusy = false;
+    let checkingSaved = false;
     $('locationButton').href = configuracao.urlLocal;
 
     function uniqueRequestId() {
@@ -181,6 +199,7 @@
       if (submitBusy || !overlay.hidden) return;
       lastFocus = document.activeElement;
       confirmedEntry = null;
+      $('cancelledContent').hidden = true;
       $('formContent').hidden = false;
       $('videoContent').hidden = true;
       $('successContent').hidden = true;
@@ -200,10 +219,69 @@
       document.body.classList.remove('dialog-open');
       if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
     }
-    $('rsvpButton').addEventListener('click', showDialog);
+    function openSaved(entry, returning = false) {
+      if (!entry || submitBusy) return;
+      if (overlay.hidden) lastFocus = document.activeElement;
+      confirmedEntry = entry;
+      $('cancelledContent').hidden = true;
+      overlay.hidden = false;
+      document.body.classList.add('dialog-open');
+      $('thanksTitle').textContent = returning ? 'Sua confirmação está salva!' : 'Presença confirmada!';
+      showThanks();
+    }
+    function normalizeEntry(data) {
+      return data && data.status !== 'cancelado'
+        ? {nome:data.nome, guests:data.acompanhantes || [], alimento:data.alimento}
+        : null;
+    }
+    async function checkSaved(auto = false) {
+      if (!configurado) return;
+      const response = await chamar('minhaConfirmacao');
+      savedEntry = normalizeEntry(response.confirmacao);
+      if (auto && savedEntry && overlay.hidden) openSaved(savedEntry, true);
+    }
+    $('rsvpButton').addEventListener('click', async () => {
+      if (checkingSaved || submitBusy || !overlay.hidden) return;
+      checkingSaved = true;
+      try {
+        await checkSaved();
+        if (savedEntry) openSaved(savedEntry, true);
+        else showDialog();
+      } catch {
+        showDialog();
+        showError('Não foi possível consultar sua confirmação anterior. Confira sua conexão antes de tentar novamente.');
+      } finally { checkingSaved = false; }
+    });
     $('closeDialog').addEventListener('click', hideDialog);
     $('cancelButton').addEventListener('click', hideDialog);
     $('finishButton').addEventListener('click', hideDialog);
+    $('cancelledClose').addEventListener('click', hideDialog);
+    $('confirmAgain').addEventListener('click', () => { hideDialog(); showDialog(); });
+    $('cancelConfirmation').addEventListener('click', async () => {
+      if (submitBusy || !confirmedEntry) return;
+      const button = $('cancelConfirmation');
+      const cancelError = $('cancelError');
+      cancelError.hidden = true;
+      submitBusy = true;
+      button.disabled = true;
+      button.textContent = 'Cancelando...';
+      try {
+        await chamar('cancelarPresenca');
+        savedEntry = null;
+        confirmedEntry = null;
+        requestId = null;
+        form.reset(); companions.replaceChildren(); updateTotal();
+        $('successContent').hidden = true;
+        $('cancelledContent').hidden = false;
+      } catch (err) {
+        cancelError.textContent = mensagemFirebase(err, 'Não foi possível cancelar agora. Tente novamente.');
+        cancelError.hidden = false;
+      } finally {
+        submitBusy = false;
+        button.disabled = false;
+        button.textContent = 'Não vou mais';
+      }
+    });
     overlay.addEventListener('pointerdown', (event) => { if (event.target === overlay) hideDialog(); });
     document.addEventListener('keydown', (event) => {
       if (overlay.hidden) return;
@@ -242,6 +320,9 @@
     }
     add.addEventListener('click', addCompanion);
     $('refreshFoodsButton').addEventListener('click', () => { if (!submitBusy) refreshFoods(); });
+    $('foodList').addEventListener('change', () => {
+      $('submitButton').disabled = !$('foodList').querySelector('input:checked');
+    });
 
     const displayQty = (quantity, unit) => {
       const number = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(quantity);
@@ -272,7 +353,7 @@
           option.className = 'food-option';
           const input = document.createElement('input');
           input.type = 'radio'; input.name = 'foodChoice'; input.value = String(food.id);
-          input.required = false;
+          input.required = false; // Validação do grupo feita no envio e nas regras do Firestore.
           if (String(food.id) === chosen) input.checked = true;
           const caption = document.createElement('span'); caption.className = 'food-description';
           const title = document.createElement('span'); title.textContent = food.nome;
@@ -282,21 +363,20 @@
           option.append(input, caption);
           list.appendChild(option);
         });
-        // Convidados podem confirmar mesmo antes de configurar os alimentos.
-        const noFood = document.createElement('label');
-        noFood.className = 'food-option';
-        const noFoodInput = document.createElement('input');
-        noFoodInput.type = 'radio'; noFoodInput.name = 'foodChoice'; noFoodInput.value = '';
-        if (chosen === '' || (!chosen && data.alimentos.length === 0)) noFoodInput.checked = true;
-        const noFoodText = document.createElement('span'); noFoodText.className = 'food-description';
-        const noFoodTitle = document.createElement('span'); noFoodTitle.textContent = 'Somente confirmar presença';
-        const noFoodDetails = document.createElement('small'); noFoodDetails.textContent = 'Sem escolher alimento agora';
-        noFoodText.append(noFoodTitle, noFoodDetails); noFood.append(noFoodInput,noFoodText);
-        list.prepend(noFood);
-        if (!list.querySelector('input:checked')) noFoodInput.checked = true;
+        if (!list.querySelector('input:checked')) {
+          // Nunca escolha automaticamente: a pessoa precisa decidir o alimento.
+          list.querySelectorAll('input').forEach(input => { input.checked = false; });
+        }
+        if (data.alimentos.length === 0) {
+          $('foodStatus').textContent = 'Nenhum alimento disponível agora. Aguarde a organização liberar opções.';
+          $('foodStatus').hidden = false;
+          list.hidden = true;
+          $('submitButton').disabled = true;
+          return;
+        }
         $('foodStatus').hidden = true;
         list.hidden = false;
-        $('submitButton').disabled = false;
+        $('submitButton').disabled = !list.querySelector('input:checked');
       } catch (err) {
         if (version !== loadVersion || overlay.hidden || submitBusy) return;
         $('foodStatus').textContent = !configurado
@@ -321,13 +401,18 @@
       };
       addLine('Convidado: ', confirmedEntry.nome);
       if (confirmedEntry.guests.length) addLine('Acompanhantes: ', confirmedEntry.guests.join(', '));
-      addLine('Total: ', `${1 + confirmedEntry.guests.length} pessoa(s)`);
-      if (confirmedEntry.alimento) addLine('Vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
-      addLine('Confirmação: ', confirmedEntry.codigo);
+      if (confirmedEntry.alimento) addLine('Você vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
+      addLine('Data: ', 'Sábado, 17/10');
+      addLine('Horário: ', '13 horas');
+      addLine('Local: ', 'Capão da Onça — Rufinópolis');
+      $('receiptMaps').href = configuracao.urlLocal;
+      $('cancelError').hidden = true;
       $('finishButton').focus();
     }
     async function showVideo(entry) {
       confirmedEntry = entry;
+      savedEntry = entry;
+      $('thanksTitle').textContent = 'Presença confirmada!';
       $('formContent').hidden = true;
       $('successContent').hidden = true;
       $('videoContent').hidden = false;
@@ -379,7 +464,7 @@
       if (name.length < 2 || guests.some(n => n.length < 2)) {
         showError('Preencha seu nome e o nome de todos os acompanhantes.'); return;
       }
-      if (!choice) { showError('Escolha uma das opções de confirmação.'); return; }
+      if (!choice || !choice.value) { showError('Escolha obrigatoriamente um alimento para levar.'); return; }
       if (!form.reportValidity()) return;
       if (!requestId) requestId = uniqueRequestId();
       const submit = $('submitButton');
@@ -395,7 +480,7 @@
         if (!data.ok) throw new Error('Não foi possível confirmar agora.');
         requestId = null;
         form.reset(); companions.replaceChildren(); updateTotal();
-        await showVideo({ nome: data.nome || name, guests: data.acompanhantes || guests, alimento: data.alimento, codigo: data.codigo });
+        await showVideo({ nome: data.nome || name, guests: data.acompanhantes || guests, alimento: data.alimento });
       } catch (err) {
         const mensagem = mensagemFirebase(err, 'Falha ao registrar. Verifique sua conexão e tente novamente.');
         showError(mensagem);
@@ -403,10 +488,12 @@
       } finally {
         submitBusy = false;
         submit.classList.remove('is-busy');
-        submit.disabled = $('foodList').hidden;
+        submit.disabled = $('foodList').hidden || !form.querySelector('input[name="foodChoice"]:checked');
         submit.textContent = 'Finalizar confirmação ✓';
       }
     });
+    // Ao voltar ao convite no mesmo navegador, recupera o resumo do Firestore.
+    void checkSaved(true).catch(() => { /* O convite ainda pode abrir sem rede. */ });
   </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ service cloud.firestore {
     function validConfirmacao(uid) {
       let d = request.resource.data;
       return logged() && request.auth.uid == uid
-        && d.keys().hasOnly(['codigo','uid','nome','acompanhantes','total','alimento','criado_em','createdAt'])
+        && d.keys().hasOnly(['codigo','uid','nome','acompanhantes','total','alimento','criado_em','createdAt','status'])
         && d.keys().hasAll(['codigo','uid','nome','acompanhantes','total','alimento','criado_em','createdAt'])
         && d.uid == uid && d.codigo is string && d.codigo.size() <= 40
         && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 90
@@ -17,11 +17,13 @@ service cloud.firestore {
         && d.total == d.acompanhantes.size() + 1
         && d.criado_em is string && d.criado_em.size() <= 45
         && d.createdAt == request.time
-        && (d.alimento == null || reserveOk(d.alimento));
+        && d.get('status','confirmado') == 'confirmado'
+        && reserveOk(d.alimento);
     }
     function reserveOk(f) {
       let path = /databases/$(database)/documents/alimentos/$(f.id);
       return f is map && f.keys().hasOnly(['id','nome','quantidade','unidade'])
+        && f.keys().hasAll(['id','nome','quantidade','unidade'])
         && f.id is string && f.id.matches('^[a-zA-Z0-9_-]{1,64}$')
         && exists(path)
         && f.nome == get(path).data.nome
@@ -32,38 +34,70 @@ service cloud.firestore {
         && getAfter(path).data.used >= get(path).data.used + f.quantidade - 0.000001
         && getAfter(path).data.used <= get(path).data.used + f.quantidade + 0.000001;
     }
+    function devolucaoOk(f) {
+      let path = /databases/$(database)/documents/alimentos/$(f.id);
+      return f is map && f.id is string
+        && (!exists(path) || (
+          getAfter(path).data.used >= 0
+          && getAfter(path).data.used >= get(path).data.used - f.quantidade - 0.000001
+          && getAfter(path).data.used <= get(path).data.used - f.quantidade + 0.000001
+        ));
+    }
+    function validCancelamento(uid) {
+      let d = request.resource.data;
+      return logged() && request.auth.uid == uid
+        && resource.data.get('status', 'confirmado') == 'confirmado'
+        && d.diff(resource.data).affectedKeys().hasOnly(['status','cancelado_em'])
+        && d.status == 'cancelado'
+        && d.cancelado_em == request.time
+        && (resource.data.alimento == null || devolucaoOk(resource.data.alimento));
+    }
     match /admins/{uid} {
-      // Só a pessoa logada no dispositivo consegue consultar se foi aprovada.
-      // Cadastro e revogação de administradores: exclusivamente no Console do Firebase.
       allow get: if logged() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
     }
     match /alimentos/{id} {
-      // Nomes e quantidades disponíveis são públicos. Dados pessoais não ficam aqui.
       allow read: if true;
       allow create, delete: if admin();
-      allow update: if admin() || reservaDoConvidado(id);
+      allow update: if admin() || reservaDoConvidado(id) || devolucaoDoConvidado(id);
     }
     function reservaDoConvidado(id) {
       let conf = /databases/$(database)/documents/confirmacoes/$(request.auth.uid);
       let d = request.resource.data;
-      return logged() && !exists(conf)
+      return logged() && (!exists(conf) || get(conf).data.get('status','confirmado') == 'cancelado')
         && existsAfter(conf)
+        && getAfter(conf).data.get('status','confirmado') == 'confirmado'
         && d.diff(resource.data).affectedKeys().hasOnly(['used'])
         && resource.data.ativo == true
         && resource.data.por_confirmacao > 0
         && d.used <= resource.data.total + 0.000001
         && d.used >= resource.data.used + resource.data.por_confirmacao - 0.000001
         && d.used <= resource.data.used + resource.data.por_confirmacao + 0.000001
-        && getAfter(conf).data.alimento != null
         && getAfter(conf).data.alimento.id == id
         && getAfter(conf).data.alimento.quantidade == resource.data.por_confirmacao;
+    }
+    function devolucaoDoConvidado(id) {
+      let conf = /databases/$(database)/documents/confirmacoes/$(request.auth.uid);
+      let d = request.resource.data;
+      return logged() && exists(conf) && existsAfter(conf)
+        && get(conf).data.get('status','confirmado') == 'confirmado'
+        && get(conf).data.alimento != null
+        && get(conf).data.alimento.id == id
+        && getAfter(conf).data.status == 'cancelado'
+        && d.diff(resource.data).affectedKeys().hasOnly(['used'])
+        && d.used >= 0
+        && d.used >= resource.data.used - get(conf).data.alimento.quantidade - 0.000001
+        && d.used <= resource.data.used - get(conf).data.alimento.quantidade + 0.000001;
     }
     match /confirmacoes/{uid} {
       allow get: if admin() || (logged() && uid == request.auth.uid);
       allow list: if admin();
       allow create: if validConfirmacao(uid);
-      allow update, delete: if false;
+      allow update: if validCancelamento(uid)
+        || (logged() && request.auth.uid == uid
+            && resource.data.get('status', 'confirmado') == 'cancelado'
+            && validConfirmacao(uid));
+      allow delete: if false;
     }
     match /{document=**} { allow read, write: if false; }
   }

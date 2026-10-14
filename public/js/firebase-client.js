@@ -63,7 +63,8 @@ const foodCard = f => ({ ...f, saldo: Math.max(0,round3(f.total-f.used)),
 function rowData(d) {
   const r = d.data();
   return { id:d.id, codigo:r.codigo, nome:r.nome, acompanhantes:r.acompanhantes||[],
-    total:r.total, alimento:r.alimento, criado_em:r.criado_em };
+    total:r.total, alimento:r.alimento, criado_em:r.criado_em,
+    status:r.status === 'cancelado' ? 'cancelado' : 'confirmado', cancelado_em:r.cancelado_em || null };
 }
 async function assertAdmin() {
   const admin = await verificarAdmin();
@@ -77,6 +78,36 @@ export async function chamar(nome, parametros = {}) {
       id:f.id, nome:f.nome, unidade:f.unidade, quantidade:f.por_confirmacao, vagas:f.vagas
     })) };
   }
+  if (nome === 'minhaConfirmacao') {
+    // Não criamos contas anônimas para quem apenas abre o convite.
+    const {auth} = await conectar();
+    await auth.authStateReady();
+    if (!auth.currentUser) return {ok:true, confirmacao:null};
+    const own = await store.getDoc(store.doc(db, 'confirmacoes', auth.currentUser.uid));
+    return {ok:true, confirmacao:own.exists() ? rowData(own) : null};
+  }
+  if (nome === 'cancelarPresenca') {
+    const user = await garantirConvidado();
+    const ref = store.doc(db, 'confirmacoes', user.uid);
+    const result = await store.runTransaction(db, async tx => {
+      const current = await tx.get(ref);
+      if (!current.exists()) return {cancelado:true};
+      const record = current.data();
+      if (record.status === 'cancelado') return {cancelado:true};
+      const f = record.alimento;
+      const foodRef = f?.id ? store.doc(db, 'alimentos', f.id) : null;
+      const existingFood = foodRef ? await tx.get(foodRef) : null;
+      if (existingFood?.exists()) {
+        const oldUsed = Number(existingFood.data().used);
+        const used = round3(oldUsed - Number(f.quantidade));
+        if (used < 0) throw new Error('O saldo do alimento precisa ser conferido pela organização.');
+        tx.update(foodRef, {used});
+      }
+      tx.update(ref, {status:'cancelado',cancelado_em:store.serverTimestamp()});
+      return {cancelado:true};
+    });
+    return {ok:true,...result};
+  }
   if (nome === 'confirmarPresenca') {
     const user = await garantirConvidado();
     if (parametros.website) throw new Error('Não foi possível validar a confirmação.');
@@ -87,13 +118,13 @@ export async function chamar(nome, parametros = {}) {
     }
     const names = companions.map(n => n.trim().replace(/\s+/g,' '));
     const selectedId = String(parametros.alimento_id || '');
-    if (selectedId !== '' && !/^[a-zA-Z0-9_-]{1,64}$/.test(selectedId)) throw new Error('Alimento inválido.');
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(selectedId)) throw new Error('Escolha um alimento para confirmar presença.');
     const ref = store.doc(db, 'confirmacoes', user.uid);
     const result = await store.runTransaction(db, async tx => {
       const existing = await tx.get(ref);
-      if (existing.exists()) return existing.data(); // Não duplica confirmação ao tentar outra vez.
-      const foodRef = selectedId ? store.doc(db, 'alimentos', selectedId) : null;
-      const foodDoc = foodRef ? await tx.get(foodRef) : null;
+      if (existing.exists() && existing.data().status !== 'cancelado') return existing.data(); // Não duplica confirmação.
+      const foodRef = store.doc(db, 'alimentos', selectedId);
+      const foodDoc = await tx.get(foodRef);
       let selectedFood = null;
       if (foodDoc) {
         if (!foodDoc.exists()) throw new Error('O alimento escolhido não está mais disponível.');
@@ -107,12 +138,12 @@ export async function chamar(nome, parametros = {}) {
       const uuid = String(parametros.solicitacao_id || user.uid).replace(/-/g,'').slice(0,8).toUpperCase();
       const row = { codigo:`MB-${uuid}`, uid:user.uid, nome:guestName,
         acompanhantes:names, total:names.length+1, alimento:selectedFood,
-        criado_em:new Date().toISOString(), createdAt:store.serverTimestamp() };
+        criado_em:new Date().toISOString(), createdAt:store.serverTimestamp(), status:'confirmado' };
       tx.set(ref, row);
       return row;
     });
     return { ok: true, codigo:result.codigo, nome:result.nome, acompanhantes:result.acompanhantes,
-      total:result.total, alimento:result.alimento };
+      total:result.total, alimento:result.alimento, status:result.status || 'confirmado' };
   }
   await assertAdmin();
   if (nome === 'dadosAdmin') {
@@ -121,8 +152,9 @@ export async function chamar(nome, parametros = {}) {
       store.getDocs(store.collection(db, 'confirmacoes'))
     ]);
     const list = foodList(f).map(foodCard);
-    return { ok:true, alimentos:list, estatisticas: { confirmacoes:c.size,
-      pessoas:c.docs.reduce((n,d) => n + (d.data().total||1),0) } };
+    const active = c.docs.filter(d => d.data().status !== 'cancelado');
+    return { ok:true, alimentos:list, estatisticas: { confirmacoes:active.length,
+      pessoas:active.reduce((n,d) => n + (d.data().total||1),0) } };
   }
   if (nome === 'paginaConvidados') {
     let q = store.query(store.collection(db,'confirmacoes'),store.orderBy('createdAt','desc'),store.limit(100));

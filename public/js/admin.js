@@ -63,11 +63,12 @@ function renderGuests() {
     makeTextCell(row,g.acompanhantes.length ? g.acompanhantes.join(', ') : '—');
     makeTextCell(row,g.total);
     makeTextCell(row,g.alimento ? `${g.alimento.nome} — ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Não informado');
+    makeTextCell(row,g.status === 'cancelado' ? 'Cancelado (porção liberada)' : 'Confirmado');
     const when = g.criado_em ? new Date(g.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}) : '—';
     makeTextCell(row, when);
     rows.appendChild(row);
   }
-  if(!filtered.length) { const row=document.createElement('tr'); const cell=document.createElement('td');cell.colSpan=6;cell.textContent='Nenhum convidado encontrado nesta página.';row.appendChild(cell);rows.appendChild(row); }
+  if(!filtered.length) { const row=document.createElement('tr'); const cell=document.createElement('td');cell.colSpan=7;cell.textContent='Nenhum convidado encontrado nesta página.';row.appendChild(cell);rows.appendChild(row); }
   $('loadMore').hidden = !cursor;
 }
 $('search').addEventListener('input',renderGuests);
@@ -96,10 +97,10 @@ $('exportCSV').addEventListener('click',async()=>{
       const page=await chamar('paginaConvidados', next ? {cursor:next} : {});
       all.push(...page.confirmacoes);next=page.cursorSeguinte;
     } while(next);
-    const lines=[['Código','Data','Convidado','Acompanhantes','Total de pessoas','Alimento','Quantidade','Unidade']];
+    const lines=[['Código','Data','Convidado','Acompanhantes','Total de pessoas','Alimento','Quantidade','Unidade','Status']];
     for(const g of all) lines.push([
       g.codigo,g.criado_em,g.nome,g.acompanhantes.join(' | '),g.total,
-      g.alimento?.nome||'',g.alimento?.quantidade??'',g.alimento?.unidade||''
+      g.alimento?.nome||'',g.alimento?.quantidade??'',g.alimento?.unidade||'',g.status === 'cancelado' ? 'Cancelado' : 'Confirmado'
     ]);
     const csv='\uFEFF'+lines.map(row=>row.map(exportField).join(';')).join('\r\n');
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
