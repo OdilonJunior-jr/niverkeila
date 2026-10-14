@@ -127,7 +127,7 @@
     .floating-attractions img { display: block; width: 100%; height: auto; filter: drop-shadow(0 5px 8px rgba(0,0,0,.21)); }
     .floating-attractions button:hover img { transform: translateY(-2px) scale(1.02); }
     .floating-attractions button img { transition: transform .18s ease; }
-    .floating-attractions button.pulse { animation: floatPulse 2.3s ease-in-out infinite; }
+    .floating-attractions button.pulse img { animation: floatPulse 2.3s ease-in-out infinite; }
     @keyframes floatPulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.03); } }
     .attractions-panel { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(92px, calc(env(safe-area-inset-bottom) + 92px)); z-index: 36; width: min(92vw, 320px); background: #fffaf1; border: 2px solid #fff; border-radius: 22px; box-shadow: 0 18px 42px rgba(0,0,0,.28); overflow: hidden; }
     .attractions-panel[hidden] { display:none !important; }
@@ -137,6 +137,8 @@
     .attractions-close { width:30px; height:30px; border-radius:50%; background:#f0efdf !important; color:#184729; font-size:22px; }
     .attractions-list { display:grid; gap:10px; padding:0 14px 14px; }
     .attraction-card { display:flex; gap:12px; align-items:center; padding:10px; border-radius:16px; background:#fff; border:1px solid #e6e2d4; box-shadow: 0 2px 12px rgba(0,0,0,.05); text-decoration:none; color:inherit; cursor:pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+    .attraction-card, .attraction-card * { pointer-events: auto; }
+    .attraction-card:active { transform:scale(.985); }
     .attraction-card:hover { border-color:#8cc79c; background:#f4fbf2; transform:translateY(-2px); }
     .attraction-card:focus-visible { outline:3px solid #178346; outline-offset:2px; }
     .attraction-card img { width:74px; height:74px; object-fit:cover; border-radius:14px; flex:0 0 74px; }
@@ -172,16 +174,18 @@
       <button type="button" id="closeAttractions" class="attractions-close" aria-label="Fechar atrações">×</button>
     </div>
     <div class="attractions-list">
-      <a class="attraction-card" href="https://www.instagram.com/brunoerobson/" target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram de Bruno e Robson em nova aba">
+      <a class="attraction-card" href="https://www.instagram.com/brunoerobson/" aria-label="Visitar Instagram de Bruno e Robson">
         <img src="assets/bruno-robson.jpg" alt="Bruno e Robson">
         <div class="attraction-info">
           <strong>Bruno e Robson</strong>
+          <span>Visitar Instagram ↗</span>
         </div>
       </a>
-      <a class="attraction-card" href="https://www.instagram.com/kitocadaoficial/" target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram de Kitocada em nova aba">
+      <a class="attraction-card" href="https://www.instagram.com/kitocadaoficial/" aria-label="Visitar Instagram de Kitocada">
         <img src="assets/kitocada.jpg" alt="Kitocada">
         <div class="attraction-info">
           <strong>Kitocada</strong>
+          <span>Visitar Instagram ↗</span>
         </div>
       </a>
     </div>
