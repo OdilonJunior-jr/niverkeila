@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Todos os dados são acessados somente por Cloud Functions (Admin SDK).
+    // Este bloqueio também impede leitura pública da lista de convidados.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

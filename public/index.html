@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#075a2c">
+  <meta name="description" content="Made in Brasil — comemoração de 52 anos! 17/10, sábado, a partir das 13 horas, no Capão da Onça.">
+  <title>Made in Brasil | 52 anos — Confirme sua presença</title>
+  <link rel="preload" as="image" href="assets/convite.png">
+  <style>
+    :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #25352b; background: #f7efde; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body { margin: 0; min-height: 100vh; background: #f7efde; }
+    body.dialog-open { overflow: hidden; }
+    .artboard { position: relative; width: min(100%, 580px); margin-inline: auto; line-height: 0; }
+    .poster { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+    .hotspot { position: absolute; z-index: 2; border: 0; padding: 0; background: transparent; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: rgba(255,255,255,.18); touch-action: manipulation; }
+    .hotspot:hover { background: rgba(255,255,255,.10); }
+    .hotspot:active { background: rgba(255,255,255,.19); }
+    .hotspot:focus-visible { outline: 3px solid #154e25; outline-offset: 3px; }
+    .location-hotspot { left: 20.2%; top: 80.35%; width: 59.8%; height: 6.95%; }
+    .rsvp-hotspot { left: 17.1%; top: 88.55%; width: 65.7%; height: 7.49%; }
+    [hidden] { display: none !important; }
+    .overlay { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 12px; background: rgba(9,39,23,.75); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); overflow-y: auto; }
+    .modal { position: relative; width: min(100%, 480px); max-height: calc(100dvh - 24px); overflow-y: auto; border-radius: 24px; background: #fff9ec; box-shadow: 0 22px 65px rgba(0,0,0,.33); border: 3px solid #fff; }
+    .modal::before { content: ""; display: block; height: 10px; background: linear-gradient(90deg,#007b33 0 30%,#fac529 30% 52%,#ef6b20 52% 74%,#c51a29 74%); }
+    .modal-content { padding: 24px 23px 26px; }
+    .modal-header { padding-right: 25px; }
+    .eyebrow { color: #b44e13; letter-spacing: .08em; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    h1 { margin: 6px 0 6px; color: #08602e; font-size: clamp(25px, 6vw, 30px); line-height: 1.14; letter-spacing: -.03em; }
+    .lead { margin: 0 0 20px; font-size: 14px; color: #656459; line-height: 1.55; }
+    .close-button { position: absolute; top: 20px; right: 17px; display: grid; place-items: center; width: 33px; height: 33px; border: 0; border-radius: 100%; background: #eceddc; color: #235334; font-size: 25px; line-height: 1; cursor: pointer; }
+    .field { margin: 17px 0; }
+    label, .field-label { display: block; font-size: 14px; font-weight: 780; margin-bottom: 8px; color: #254a32; }
+    label .required { color: #c5232a; }
+    input[type="text"] { width: 100%; height: 47px; padding: 12px 14px; font: inherit; font-size: 16px; color: #193927; border: 1.6px solid #d7dccf; border-radius: 13px; background: white; transition: border-color .15s, box-shadow .15s; }
+    input[type="text"]:focus { border-color: #14823f; box-shadow: 0 0 0 3px #14823f22; outline: none; }
+    input[type="text"]::placeholder { color: #959a90; }
+    .row-title { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .small-note { color: #777d6f; font-size: 12px; font-weight: 500; }
+    .companion-row { display: flex; align-items: center; gap: 8px; margin: 9px 0; }
+    .companion-row input { min-width: 0; flex: 1; }
+    .remove { background: #f8e2dd; color: #9d2629; border: 0; border-radius: 12px; width: 42px; height: 46px; flex: 0 0 42px; font-size: 22px; font-weight: bold; cursor: pointer; }
+    .add-button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 13px; border: 2px dashed #209954; border-radius: 12px; background: #edfaed; color: #086b35; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .plus { display: inline-grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: #147a3c; color: white; font-size: 18px; line-height: 1; }
+    .total { margin: 19px 0; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; color: #265238; background: #fff0c2; border-radius: 12px; gap: 8px; font-size: 14px; }
+    .total strong { font-size: 18px; }
+    .primary { width: 100%; min-height: 51px; padding: 12px 18px; border: 2px solid #fff; border-radius: 14px; background: #bf0717; box-shadow: 0 3px 0 #e8af16; color: white; font-size: 17px; font-weight: 900; cursor: pointer; }
+    .primary:disabled { opacity: .65; cursor: progress; }
+    .primary:hover:not(:disabled) { background: #a90013; }
+    .secondary { display: block; border: 0; padding: 13px 8px; background: transparent; color: #55705c; text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; margin: 7px auto 0; }
+    .error { padding: 11px 12px; margin: 12px 0; color: #8e1c25; background: #fff0ed; border-left: 4px solid #c52b32; border-radius: 7px; font-size: 13px; line-height: 1.5; }
+    .success-icon { width: 68px; height: 68px; margin: 0 auto 12px; display: grid; place-items: center; border: 4px solid #a3d09d; background: #117a3b; color: white; border-radius: 50%; font-size: 37px; font-weight: 900; }
+    .success-content { text-align: center; }
+    .success-content h1 { font-size: 29px; }
+    .receipt { padding: 16px; margin: 18px 0; border-radius: 14px; text-align: left; background: #f1f8e9; border: 1px solid #d1e8cb; font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
+    .receipt strong { color: #126b35; }
+    .receipt ul { margin: 4px 0 6px; padding-left: 22px; }
+    .tiny { font-size: 12px; line-height: 1.5; color: #777b70; }
+    .share-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .share-buttons button, .share-buttons a { flex: 1; min-width: 140px; text-align: center; display: inline-flex; align-items: center; justify-content: center; padding: 13px; border-radius: 12px; border: 1px solid #208149; color: #0a662e; text-decoration: none; background: white; font-weight: 800; font-size: 14px; cursor: pointer; }
+    .share-buttons .wa { background: #197a43; color: white; }
+    .food-list { display: grid; gap: 8px; margin-top: 10px; max-height: 260px; overflow-y: auto; padding: 2px; }
+    .food-option { display: flex; align-items: center; gap: 12px; margin: 0; padding: 12px 13px; border: 1.5px solid #e4e8d8; border-radius: 12px; background: white; cursor: pointer; }
+    .food-option:has(input:checked) { border-color: #148448; background: #ecf8e9; box-shadow: 0 0 0 2px #14844820; }
+    .food-option input { flex-shrink: 0; accent-color: #0d7939; width: 19px; height: 19px; }
+    .food-description { display: flex; flex-direction: column; gap: 3px; font-weight: 800; font-size: 14px; }
+    .food-description small { color: #637363; font-weight: 600; font-size: 12px; }
+    .loading-foods { padding: 16px 10px; border-radius: 10px; background: #eff5e8; color: #526b54; font-size: 13px; line-height: 1.5; }
+    .video-content { text-align: center; }
+    .video-content h1 { font-size: 24px; }
+    .video-wrap { margin: 14px auto; position: relative; max-width: 280px; background: #101d13; border-radius: 16px; overflow: hidden; }
+    .video-wrap video { display: block; width: 100%; max-height: 55dvh; background: #101d13; object-fit: contain; }
+    .video-action { margin: 10px 0 0; }
+    .video-status { font-size: 13px; line-height: 1.6; color: #687368; }
+    .honeypot { position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; overflow: hidden; }
+    @media (max-width: 480px) { .modal-content { padding: 21px 18px 23px; } .overlay { padding: 8px; } .modal { max-height: calc(100dvh - 16px); border-radius: 21px; } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="artboard" aria-label="Convite: Made in Brasil, 52 anos">
+    <img class="poster" src="assets/convite.png" alt="Convite Made in Brasil, 52 anos. Gratidão por tudo que vivi e por tudo que ainda vou viver! 17 de outubro, sábado, a partir das 13 horas. Capão da Onça. Toque nos botões de localização ou confirmar presença." width="941" height="1672">
+    <a class="hotspot location-hotspot" id="locationButton" target="_blank" rel="noopener noreferrer" aria-label="Abrir localização Capão da Onça, Rufinópolis, no Google Maps" title="Ver localização"></a>
+    <button class="hotspot rsvp-hotspot" id="rsvpButton" type="button" aria-label="Abrir formulário para confirmar presença" title="Confirmar presença"></button>
+  </main>
+
+  <div id="overlay" class="overlay" hidden>
+    <section id="dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" tabindex="-1">
+      <button type="button" class="close-button" id="closeDialog" aria-label="Fechar janela">×</button>
+      <div class="modal-content" id="formContent">
+        <header class="modal-header">
+          <div class="eyebrow">Made in Brasil • 52 anos 🎉</div>
+          <h1 id="dialogTitle">Confirme sua presença!</h1>
+          <p class="lead">Informe seu nome, adicione os acompanhantes e escolha <strong>um alimento</strong> para levar.</p>
+        </header>
+        <form id="rsvpForm" autocomplete="on">
+          <div class="field">
+            <label for="guestName">Seu nome <span class="required">*</span></label>
+            <input id="guestName" name="guestName" type="text" minlength="2" maxlength="90" placeholder="Digite seu nome" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <div class="row-title"><span class="field-label">Acompanhantes</span><span class="small-note">Até 12 acompanhantes</span></div>
+            <div id="companions"></div>
+            <button type="button" class="add-button" id="addCompanion"><span class="plus" aria-hidden="true">+</span> Adicionar acompanhante</button>
+          </div>
+          <div class="total"><span>Total da confirmação</span><strong id="totalPeople" aria-live="polite">1 pessoa</strong></div>
+          <div class="field">
+            <div class="row-title"><span class="field-label" id="foodLabel">O que você vai levar? <span class="required">*</span></span><span class="small-note">Uma opção por confirmação</span></div>
+            <p class="tiny" style="margin:0">A quantidade indicada vale para a confirmação inteira, com ou sem acompanhantes.</p>
+            <div id="foodStatus" class="loading-foods" role="status">Carregando alimentos disponíveis...</div>
+            <div id="foodList" class="food-list" role="group" aria-labelledby="foodLabel" hidden></div>
+          </div>
+          <p class="tiny">Seu nome e os acompanhantes informados serão vistos somente pela organização do evento.</p>
+          <div class="honeypot" aria-hidden="true"><label for="website">Não preencher</label><input type="text" name="website" id="website" tabindex="-1" autocomplete="off"></div>
+          <p class="error" id="formError" role="alert" hidden></p>
+          <button type="submit" class="primary" id="submitButton" disabled>Finalizar confirmação ✓</button>
+          <button type="button" class="secondary" id="cancelButton">Voltar ao convite</button>
+        </form>
+      </div>
+      <div class="modal-content video-content" id="videoContent" hidden>
+        <div class="eyebrow">Presença registrada ✓</div>
+        <h1>Obrigado pela confirmação!</h1>
+        <p class="lead">Preparamos uma mensagem especial para você. Assista com som!</p>
+        <div class="video-wrap"><video id="confirmationVideo" src="assets/confirmacao.mp4" preload="metadata" playsinline webkit-playsinline aria-label="Vídeo de agradecimento"></video></div>
+        <button class="primary video-action" type="button" id="playVideoButton" hidden>▶ Assistir com áudio</button>
+        <p id="videoStatus" class="video-status" aria-live="polite">Iniciando o vídeo...</p>
+      </div>
+      <div class="modal-content success-content" id="successContent" hidden>
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <h1 id="thanksTitle">Presença confirmada!</h1>
+        <p class="lead">Muito obrigado por confirmar! <strong>Contamos com a sua presença</strong> no sábado, <strong>17/10, a partir das 13 horas</strong>, no Capão da Onça. 🎉</p>
+        <div class="receipt" id="receipt" aria-live="polite"></div>
+        <button type="button" class="primary" id="finishButton">Fechar e voltar ao convite</button>
+      </div>
+    </section>
+  </div>
+  <script type="module">
+    import { chamar, garantirConvidado, configurado, mensagemFirebase } from "./js/firebase-client.js";
+    'use strict';
+    const configuracao = {
+      urlLocal: 'https://www.google.com/maps/search/?api=1&query=Cap%C3%A3o%20da%20On%C3%A7a%2C%20Rufin%C3%B3polis',
+      limiteAcompanhantes: 12
+    };
+    const $ = (id) => document.getElementById(id);
+    const overlay = $('overlay');
+    const form = $('rsvpForm');
+    const companions = $('companions');
+    const add = $('addCompanion');
+    const error = $('formError');
+    const video = $('confirmationVideo');
+    let lastFocus = null;
+    let companionCount = 0;
+    let loadVersion = 0;
+    let requestId = null;
+    let confirmedEntry = null;
+    let stockRefreshTimer = null;
+    function stopStockRefresh() {
+      if (stockRefreshTimer) clearInterval(stockRefreshTimer);
+      stockRefreshTimer = null;
+    }
+    function startStockRefresh() {
+      stopStockRefresh();
+      stockRefreshTimer = setInterval(() => {
+        if (!overlay.hidden && !$('formContent').hidden && !$('submitButton').dataset.saving) refreshFoods();
+      }, 20000);
+    }
+    $('locationButton').href = configuracao.urlLocal;
+
+    function uniqueRequestId() {
+      if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+      return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+    }
+    function showError(message) {
+      error.textContent = message;
+      error.hidden = false;
+    }
+    function showDialog() {
+      lastFocus = document.activeElement;
+      $('formContent').hidden = false;
+      $('videoContent').hidden = true;
+      $('successContent').hidden = true;
+      overlay.hidden = false;
+      document.body.classList.add('dialog-open');
+      error.hidden = true;
+      if (!requestId) requestId = uniqueRequestId();
+      refreshFoods();
+      startStockRefresh();
+      requestAnimationFrame(() => $('guestName').focus());
+    }
+    function hideDialog() {
+      loadVersion++;
+      stopStockRefresh();
+      video.pause();
+      video.currentTime = 0;
+      overlay.hidden = true;
+      document.body.classList.remove('dialog-open');
+      if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+    }
+    $('rsvpButton').addEventListener('click', showDialog);
+    $('closeDialog').addEventListener('click', hideDialog);
+    $('cancelButton').addEventListener('click', hideDialog);
+    $('finishButton').addEventListener('click', hideDialog);
+    overlay.addEventListener('pointerdown', (event) => { if (event.target === overlay) hideDialog(); });
+    document.addEventListener('keydown', (event) => {
+      if (overlay.hidden) return;
+      if (event.key === 'Escape') hideDialog();
+      if (event.key === 'Tab') {
+        const enabled = [...$('dialog').querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')]
+          .filter(el => el.getClientRects().length && el.closest('[hidden]') === null && el.tabIndex >= 0);
+        const first = enabled[0], last = enabled[enabled.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+
+    function updateTotal() {
+      const n = 1 + companions.querySelectorAll('.companion-row').length;
+      $('totalPeople').textContent = n === 1 ? '1 pessoa' : `${n} pessoas`;
+      add.disabled = n - 1 >= configuracao.limiteAcompanhantes;
+      add.style.opacity = add.disabled ? '.5' : '1';
+    }
+    function addCompanion() {
+      if (companions.children.length >= configuracao.limiteAcompanhantes) return;
+      companionCount++;
+      const row = document.createElement('div');
+      row.className = 'companion-row';
+      const field = document.createElement('input');
+      field.type = 'text'; field.id = `companion-${companionCount}`;
+      field.required = true; field.minLength = 2; field.maxLength = 90;
+      field.placeholder = `Nome do acompanhante ${companions.children.length + 1}`;
+      field.setAttribute('aria-label', field.placeholder);
+      const remove = document.createElement('button');
+      remove.type = 'button'; remove.className = 'remove'; remove.textContent = '×';
+      remove.setAttribute('aria-label', 'Remover acompanhante');
+      remove.addEventListener('click', () => { row.remove(); updateTotal(); });
+      row.append(field, remove);
+      companions.appendChild(row); updateTotal(); field.focus();
+    }
+    add.addEventListener('click', addCompanion);
+
+    const displayQty = (quantity, unit) => {
+      const number = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(quantity);
+      const label = {
+        un: 'un.', g: 'g', kg: 'kg', porcao: 'porção(ões)', pacote: 'pacote(s)',
+        pote: 'pote(s)', bandeja: 'bandeja(s)', litro: 'L'
+      }[unit] || unit;
+      return `${number} ${label}`;
+    };
+    async function refreshFoods() {
+      const version = ++loadVersion;
+      const chosen = form.querySelector('input[name="foodChoice"]:checked')?.value;
+      $('submitButton').disabled = true;
+      $('foodList').hidden = true;
+      $('foodStatus').hidden = false;
+      $('foodStatus').textContent = 'Atualizando os alimentos disponíveis...';
+      try {
+        if (!configurado) throw new Error('Firebase ainda não foi configurado pelo organizador.');
+        const data = await chamar('listarAlimentos');
+        if (!data.ok || !Array.isArray(data.alimentos)) throw new Error('Não foi possível carregar os alimentos.');
+        if (version !== loadVersion || overlay.hidden) return;
+        const list = $('foodList');
+        list.replaceChildren();
+        data.alimentos.forEach(food => {
+          const option = document.createElement('label');
+          option.className = 'food-option';
+          const input = document.createElement('input');
+          input.type = 'radio'; input.name = 'foodChoice'; input.value = String(food.id);
+          input.required = true;
+          if (String(food.id) === chosen) input.checked = true;
+          const caption = document.createElement('span'); caption.className = 'food-description';
+          const title = document.createElement('span'); title.textContent = food.nome;
+          const details = document.createElement('small');
+          details.textContent = `Levar ${displayQty(food.quantidade, food.unidade)} · ${food.vagas} confirmação(ões) restante(s)`;
+          caption.append(title, details);
+          option.append(input, caption);
+          list.appendChild(option);
+        });
+        if (data.alimentos.length === 0) {
+          $('foodStatus').textContent = 'Os alimentos ainda não foram liberados pelo organizador ou todas as cotas estão preenchidas. Aguarde a atualização da lista.';
+          return;
+        }
+        $('foodStatus').hidden = true;
+        list.hidden = false;
+        $('submitButton').disabled = false;
+      } catch (err) {
+        if (version !== loadVersion || overlay.hidden) return;
+        $('foodStatus').textContent = !configurado
+          ? 'O convite ainda não foi conectado ao Firebase. O organizador precisa concluir a configuração.'
+          : mensagemFirebase(err, 'Não foi possível carregar os alimentos. Tente novamente em instantes.');
+      }
+    }
+
+    function showThanks() {
+      if (!confirmedEntry) return;
+      video.pause();
+      $('videoContent').hidden = true;
+      $('formContent').hidden = true;
+      $('successContent').hidden = false;
+      const receipt = $('receipt'); receipt.replaceChildren();
+      const addLine = (label, value) => {
+        const line = document.createElement('div');
+        const strong = document.createElement('strong'); strong.textContent = label;
+        line.append(strong, document.createTextNode(value)); receipt.append(line);
+      };
+      addLine('Convidado: ', confirmedEntry.nome);
+      if (confirmedEntry.guests.length) addLine('Acompanhantes: ', confirmedEntry.guests.join(', '));
+      addLine('Total: ', `${1 + confirmedEntry.guests.length} pessoa(s)`);
+      addLine('Vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
+      addLine('Confirmação: ', confirmedEntry.codigo);
+      $('finishButton').focus();
+    }
+    async function showVideo(entry) {
+      confirmedEntry = entry;
+      stopStockRefresh();
+      $('formContent').hidden = true;
+      $('successContent').hidden = true;
+      $('videoContent').hidden = false;
+      $('playVideoButton').hidden = true;
+      $('videoStatus').textContent = 'Iniciando vídeo com áudio...';
+      video.pause();
+      video.currentTime = 0;
+      video.loop = false;
+      video.muted = false;
+      video.volume = 1;
+      try {
+        await video.play();
+        $('videoStatus').textContent = 'Seu vídeo de agradecimento está sendo reproduzido com som.';
+      } catch {
+        // Alguns navegadores bloqueiam áudio automático mesmo após o envio do formulário.
+        $('videoStatus').textContent = 'Toque abaixo para ouvir o vídeo com áudio.';
+        $('playVideoButton').hidden = false;
+      }
+    }
+    $('playVideoButton').addEventListener('click', async () => {
+      try {
+        video.muted = false;
+        await video.play();
+        $('playVideoButton').hidden = true;
+        $('videoStatus').textContent = 'Vídeo com áudio em reprodução.';
+      } catch {
+        $('videoStatus').textContent = 'Não foi possível reproduzir automaticamente. Use os controles do vídeo.';
+        video.controls = true;
+      }
+    });
+    video.addEventListener('ended', showThanks);
+    video.addEventListener('error', () => {
+      if (!confirmedEntry || $('videoContent').hidden) return;
+      $('videoStatus').textContent = 'Não foi possível abrir o vídeo, mas sua presença já foi confirmada.';
+      $('playVideoButton').hidden = true;
+      video.controls = false;
+      const skip = document.createElement('button');
+      skip.type = 'button'; skip.className = 'primary'; skip.textContent = 'Ver confirmação';
+      skip.addEventListener('click', showThanks, { once: true });
+      $('videoContent').appendChild(skip);
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      error.hidden = true;
+      const name = $('guestName').value.trim().replace(/\s+/g, ' ');
+      const guests = [...companions.querySelectorAll('input')].map(input => input.value.trim().replace(/\s+/g, ' '));
+      const choice = form.querySelector('input[name="foodChoice"]:checked');
+      if (name.length < 2 || guests.some(n => n.length < 2)) {
+        showError('Preencha seu nome e o nome de todos os acompanhantes.'); return;
+      }
+      if (!choice) { showError('Escolha um alimento para levar.'); return; }
+      if (!form.reportValidity()) return;
+      if (!requestId) requestId = uniqueRequestId();
+      const submit = $('submitButton');
+      submit.disabled = true; submit.dataset.saving = '1'; submit.textContent = 'Salvando sua confirmação...';
+      try {
+        if (!configurado) throw new Error('Firebase ainda não foi configurado.');
+        await garantirConvidado();
+        const data = await chamar('confirmarPresenca', {
+          nome: name, acompanhantes: guests, alimento_id: String(choice.value),
+          solicitacao_id: requestId, website: $('website').value
+        });
+        if (!data.ok) throw new Error('Não foi possível confirmar agora.');
+        requestId = null;
+        form.reset(); companions.replaceChildren(); updateTotal();
+        await showVideo({ nome: name, guests, alimento: data.alimento, codigo: data.codigo });
+      } catch (err) {
+        const mensagem = mensagemFirebase(err, 'Falha ao registrar. Verifique sua conexão e tente novamente.');
+        if (String(err?.code || '').includes('failed-precondition')) refreshFoods();
+        showError(mensagem);
+      } finally {
+        delete submit.dataset.saving;
+        submit.disabled = $('foodList').hidden;
+        submit.textContent = 'Finalizar confirmação ✓';
+      }
+    });
+  </script>
+</body>
+</html>

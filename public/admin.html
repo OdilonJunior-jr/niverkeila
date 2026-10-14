@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#086136">
+  <title>Painel administrativo | Made in Brasil — 52 anos</title>
+  <style>
+    *{box-sizing:border-box} [hidden]{display:none!important}
+    body{margin:0;background:#f7f3e8;color:#25382b;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+    main{max-width:1240px;margin:auto;padding:18px}
+    .hero{background:#086136;border-bottom:7px solid #f8bf29;border-radius:18px;padding:24px;color:white;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+    h1{font-size:clamp(23px,3vw,31px);margin:0;font-weight:700}.hero p{margin:6px 0 0;color:#d9f5dd}
+    .panel{background:#fff;border-radius:17px;padding:22px;margin-top:17px;box-shadow:0 4px 26px #15432b0c}
+    h2{margin:0 0 8px;color:#0a6738;font-weight:650}.muted{color:#687668;font-size:13px;line-height:1.6}.small{font-size:12px}
+    .error,.notice{padding:13px;border-radius:10px;margin:15px 0}.error{background:#ffefea;color:#922127;border-left:4px solid #bd1828}.notice{background:#e8f9e9;color:#0a6632;border-left:4px solid #118345}
+    .btn,button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;text-decoration:none;font:inherit;font-weight:650;display:inline-block;background:#b8091e;color:#fff}
+    .btn:hover,button:hover{filter:brightness(.95)} button:disabled{opacity:.5;cursor:wait}.muted-button{background:#e9ece4;color:#285339}.hero button{background:#fff;color:#086136}
+    .tabs{display:flex;gap:8px;margin-top:19px;flex-wrap:wrap}.tab{border-radius:10px 10px 0 0;padding:13px 19px;font-weight:700;color:#316348;background:#e6eddf}
+    .tab[aria-selected="true"]{color:#fff;background:#0c753d}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}.stat{background:white;padding:17px;border-radius:14px;border:1px solid #e8e9de}.stat strong{display:block;font-size:29px;color:#0a763b}.stat span{font-size:12px;color:#718072}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:11px;border-bottom:1px solid #edf0eb;vertical-align:top}th{color:#106435;background:#f3f9f1}ul{margin:0;padding-left:18px}
+    .code{font-family:ui-monospace,monospace;font-size:12px;white-space:nowrap}.search{width:min(100%,370px);margin:10px 0 16px}
+    input,select{font:inherit;color:#243d2d;background:#fff;border:1px solid #bfcbbd;border-radius:9px;padding:10px 11px;min-width:0}input:focus,select:focus{outline:2px solid #42a568;outline-offset:1px}input[type=number]{width:100%}input[type=checkbox]{accent-color:#09703b;transform:scale(1.16)}
+    label{font-weight:600;display:block;margin-bottom:6px;color:#305742;font-size:12px}
+    .food-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.food-card{border:1px solid #dfe8da;border-radius:13px;padding:16px;background:#fff}.food-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.food-head strong{font-size:15px;color:#0c6235;font-weight:650}
+    .pill{font-size:11px;padding:6px 8px;border-radius:99px;background:#eef7e8;color:#096336;white-space:nowrap}.pill.off{background:#f8e9e9;color:#92242a}
+    .food-fields{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:10px}.food-fields>div:first-child{grid-column:span 3}.food-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #edf1e9}.food-foot label{margin:0;display:flex;align-items:center;gap:9px;font-size:13px}.food-amount{font-size:12px;color:#6e796e;margin-top:8px}
+    .add-card{background:#f0f9ed;border:1px dashed #70a878}.add-card h3{margin:0 0 9px}.hint{background:#fff7d9;padding:14px;border-radius:12px;color:#785a12;margin-top:16px;line-height:1.6}
+    .login-box{max-width:460px}.login-box input{width:100%;margin:0 0 14px}.login-box button{min-width:180px}.spaced{margin-top:16px}
+    @media(max-width:770px){.food-grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.food-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:480px){main{padding:10px}.panel{padding:16px}.hero{padding:18px}.food-card{padding:13px}.food-fields{gap:6px}.food-fields input,.food-fields select{padding:9px 7px}.tab{flex:1;text-align:center;padding:13px 5px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div><h1>Made in Brasil • 52 anos</h1><p>Painel de convidados e alimentos — sábado, 17/10, a partir das 13h</p></div>
+    <button type="button" id="logout" hidden>Sair do painel</button>
+  </header>
+  <p id="feedback" class="notice" role="status" aria-live="polite" hidden></p>
+  <section id="loginBox" class="panel login-box" hidden>
+    <h2>Entrar como administrador</h2>
+    <p class="muted">Somente contas cadastradas e autorizadas no Firebase podem acessar os convidados.</p>
+    <form id="loginForm">
+      <label for="email">E-mail do administrador</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Senha</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit" id="loginButton">Entrar no painel</button>
+    </form>
+  </section>
+  <section id="dashboard" hidden>
+    <div class="stats">
+      <div class="stat"><strong id="statConfirm">0</strong><span>Confirmações registradas</span></div>
+      <div class="stat"><strong id="statPeople">0</strong><span>Pessoas no total</span></div>
+      <div class="stat"><strong id="statCompanions">0</strong><span>Acompanhantes</span></div>
+      <div class="stat"><strong id="statFoods">0</strong><span>Alimentos disponíveis</span></div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Abas do painel">
+      <button id="tabGuests" class="tab" type="button" role="tab" aria-selected="true" aria-controls="guestsPanel">Convidados</button>
+      <button id="tabFoods" class="tab" type="button" role="tab" aria-selected="false" aria-controls="foodsPanel">Alimentos</button>
+    </div>
+    <section id="guestsPanel" class="panel" role="tabpanel" aria-labelledby="tabGuests">
+      <h2>Confirmações e acompanhantes</h2>
+      <p class="muted">Uma linha representa uma confirmação. A cota do alimento não é multiplicada pelo número de acompanhantes.</p>
+      <div class="actions">
+        <button type="button" id="exportCSV">Exportar CSV</button>
+        <button type="button" id="refresh" class="muted-button">Atualizar painel</button>
+      </div>
+      <label for="search">Buscar entre os convidados carregados</label>
+      <input class="search" id="search" type="search" placeholder="Nome, acompanhante, alimento...">
+      <div class="table-wrap"><table><thead><tr><th>Código</th><th>Convidado principal</th><th>Acompanhantes</th><th>Pessoas</th><th>O que vai levar</th><th>Confirmado em</th></tr></thead><tbody id="guestRows"></tbody></table></div>
+      <div class="spaced"><button id="loadMore" type="button" class="muted-button" hidden>Carregar mais convidados</button></div>
+    </section>
+    <section id="foodsPanel" class="panel" role="tabpanel" aria-labelledby="tabFoods" hidden>
+      <h2>Controle dos alimentos</h2>
+      <p class="muted">Administre o total e a quantidade por confirmação. Alimentos sem saldo suficiente deixam de aparecer para os convidados automaticamente.</p>
+      <div class="hint"><strong>Exemplo:</strong> Almôndegas = 100 unidades no total, 25 por confirmação, portanto 4 confirmações. Amendoim = 1000 g no total, 500 g por confirmação, portanto 2 confirmações. Os totais reais devem ser definidos por você.</div>
+      <div id="seedPanel" class="hint" hidden>
+        <strong>Preparação inicial:</strong> os 26 alimentos originais ainda não estão cadastrados.
+        <div class="spaced"><button id="seedButton" type="button">Cadastrar os 26 alimentos</button></div>
+        <p class="small">Todos começam com total zero. Depois configure as quantidades antes de divulgar o convite.</p>
+      </div>
+      <div class="food-grid" id="foodGrid"></div>
+    </section>
+  </section>
+</main>
+<template id="foodTemplate">
+  <section class="food-card">
+    <div class="food-head"><strong class="food-name"></strong><span class="pill"></span></div>
+    <form class="food-form">
+      <div class="food-fields">
+        <div><label>Nome do alimento</label><input name="nome" type="text" minlength="2" maxlength="90" required style="width:100%"></div>
+        <div><label>Unidade</label><select name="unidade" style="width:100%" required>
+          <option value="un">Unidades</option><option value="g">Gramas (g)</option>
+          <option value="kg">Quilos (kg)</option><option value="porcao">Porções</option>
+          <option value="pacote">Pacotes</option><option value="pote">Potes</option>
+          <option value="bandeja">Bandejas</option><option value="litro">Litros (L)</option>
+        </select></div>
+        <div><label>Total</label><input name="total" type="number" min="0" max="999999999" step="0.001" required></div>
+        <div><label>Por confirmação</label><input name="por_confirmacao" type="number" min="0.001" max="999999999" step="0.001" required></div>
+      </div>
+      <p class="food-amount"></p>
+      <div class="food-foot"><label><input name="ativo" type="checkbox"> Exibir quando houver saldo</label><button type="submit">Salvar item</button></div>
+    </form>
+  </section>
+</template>
+<script type="module" src="./js/admin.js"></script>
+</body>
+</html>
