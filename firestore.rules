@@ -1,10 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Todos os dados são acessados somente por Cloud Functions (Admin SDK).
-    // Este bloqueio também impede leitura pública da lista de convidados.
-    match /{document=**} {
-      allow read, write: if false;
+    function logged() { return request.auth != null; }
+    function admin() {
+      return logged() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
     }
+    function validConfirmacao(uid) {
+      let d = request.resource.data;
+      return logged() && request.auth.uid == uid
+        && d.keys().hasOnly(['codigo','uid','nome','acompanhantes','total','alimento','criado_em','createdAt'])
+        && d.keys().hasAll(['codigo','uid','nome','acompanhantes','total','alimento','criado_em','createdAt'])
+        && d.uid == uid && d.codigo is string && d.codigo.size() <= 40
+        && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 90
+        && d.acompanhantes is list && d.acompanhantes.size() <= 12
+        && d.total == d.acompanhantes.size() + 1
+        && d.criado_em is string && d.criado_em.size() <= 45
+        && d.createdAt == request.time
+        && (d.alimento == null || reserveOk(d.alimento));
+    }
+    function reserveOk(f) {
+      let path = /databases/$(database)/documents/alimentos/$(f.id);
+      return f is map && f.keys().hasOnly(['id','nome','quantidade','unidade'])
+        && f.id is string && f.id.matches('^[a-zA-Z0-9_-]{1,64}$')
+        && exists(path)
+        && f.nome == get(path).data.nome
+        && f.unidade == get(path).data.unidade
+        && f.quantidade == get(path).data.por_confirmacao
+        && get(path).data.ativo == true
+        && getAfter(path).data.used > get(path).data.used
+        && getAfter(path).data.used >= get(path).data.used + f.quantidade - 0.000001
+        && getAfter(path).data.used <= get(path).data.used + f.quantidade + 0.000001;
+    }
+    match /admins/{uid} {
+      // Só a pessoa logada no dispositivo consegue consultar se foi aprovada.
+      // Cadastro e revogação de administradores: exclusivamente no Console do Firebase.
+      allow get: if logged() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+    match /alimentos/{id} {
+      // Nomes e quantidades disponíveis são públicos. Dados pessoais não ficam aqui.
+      allow read: if true;
+      allow create, delete: if admin();
+      allow update: if admin() || reservaDoConvidado(id);
+    }
+    function reservaDoConvidado(id) {
+      let conf = /databases/$(database)/documents/confirmacoes/$(request.auth.uid);
+      let d = request.resource.data;
+      return logged() && !exists(conf)
+        && existsAfter(conf)
+        && d.diff(resource.data).affectedKeys().hasOnly(['used'])
+        && resource.data.ativo == true
+        && resource.data.por_confirmacao > 0
+        && d.used <= resource.data.total + 0.000001
+        && d.used >= resource.data.used + resource.data.por_confirmacao - 0.000001
+        && d.used <= resource.data.used + resource.data.por_confirmacao + 0.000001
+        && getAfter(conf).data.alimento != null
+        && getAfter(conf).data.alimento.id == id
+        && getAfter(conf).data.alimento.quantidade == resource.data.por_confirmacao;
+    }
+    match /confirmacoes/{uid} {
+      allow get: if admin() || (logged() && uid == request.auth.uid);
+      allow list: if admin();
+      allow create: if validConfirmacao(uid);
+      allow update, delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
   }
 }

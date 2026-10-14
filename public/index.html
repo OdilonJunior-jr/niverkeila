@@ -96,7 +96,7 @@
         <header class="modal-header">
           <div class="eyebrow">Made in Brasil • 52 anos 🎉</div>
           <h1 id="dialogTitle">Confirme sua presença!</h1>
-          <p class="lead">Informe seu nome, adicione os acompanhantes e escolha <strong>um alimento</strong> para levar.</p>
+          <p class="lead">Informe seu nome e os acompanhantes. Você pode escolher um alimento ou apenas confirmar presença.</p>
         </header>
         <form id="rsvpForm" autocomplete="on">
           <div class="field">
@@ -110,8 +110,8 @@
           </div>
           <div class="total"><span>Total da confirmação</span><strong id="totalPeople" aria-live="polite">1 pessoa</strong></div>
           <div class="field">
-            <div class="row-title"><span class="field-label" id="foodLabel">O que você vai levar? <span class="required">*</span></span><span class="small-note">Uma opção por confirmação</span></div>
-            <p class="tiny" style="margin:0">A quantidade indicada vale para a confirmação inteira, com ou sem acompanhantes.</p>
+            <div class="row-title"><span class="field-label" id="foodLabel">O que você vai levar?</span><span class="small-note">Escolha uma opção</span></div>
+            <p class="tiny" style="margin:0">Você pode confirmar agora e deixar o alimento para depois.</p>
             <div id="foodStatus" class="loading-foods" role="status">Carregando alimentos disponíveis...</div>
             <div id="foodList" class="food-list" role="group" aria-labelledby="foodLabel" hidden></div>
             <button type="button" class="refresh-foods" id="refreshFoodsButton">Atualizar alimentos disponíveis</button>
@@ -266,7 +266,7 @@
           option.className = 'food-option';
           const input = document.createElement('input');
           input.type = 'radio'; input.name = 'foodChoice'; input.value = String(food.id);
-          input.required = true;
+          input.required = false;
           if (String(food.id) === chosen) input.checked = true;
           const caption = document.createElement('span'); caption.className = 'food-description';
           const title = document.createElement('span'); title.textContent = food.nome;
@@ -276,10 +276,18 @@
           option.append(input, caption);
           list.appendChild(option);
         });
-        if (data.alimentos.length === 0) {
-          $('foodStatus').textContent = 'Nenhum alimento disponível no momento.';
-          return;
-        }
+        // Convidados podem confirmar mesmo antes de configurar os alimentos.
+        const noFood = document.createElement('label');
+        noFood.className = 'food-option';
+        const noFoodInput = document.createElement('input');
+        noFoodInput.type = 'radio'; noFoodInput.name = 'foodChoice'; noFoodInput.value = '';
+        if (chosen === '' || (!chosen && data.alimentos.length === 0)) noFoodInput.checked = true;
+        const noFoodText = document.createElement('span'); noFoodText.className = 'food-description';
+        const noFoodTitle = document.createElement('span'); noFoodTitle.textContent = 'Somente confirmar presença';
+        const noFoodDetails = document.createElement('small'); noFoodDetails.textContent = 'Sem escolher alimento agora';
+        noFoodText.append(noFoodTitle, noFoodDetails); noFood.append(noFoodInput,noFoodText);
+        list.prepend(noFood);
+        if (!list.querySelector('input:checked')) noFoodInput.checked = true;
         $('foodStatus').hidden = true;
         list.hidden = false;
         $('submitButton').disabled = false;
@@ -308,7 +316,7 @@
       addLine('Convidado: ', confirmedEntry.nome);
       if (confirmedEntry.guests.length) addLine('Acompanhantes: ', confirmedEntry.guests.join(', '));
       addLine('Total: ', `${1 + confirmedEntry.guests.length} pessoa(s)`);
-      addLine('Vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
+      if (confirmedEntry.alimento) addLine('Vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
       addLine('Confirmação: ', confirmedEntry.codigo);
       $('finishButton').focus();
     }
@@ -365,7 +373,7 @@
       if (name.length < 2 || guests.some(n => n.length < 2)) {
         showError('Preencha seu nome e o nome de todos os acompanhantes.'); return;
       }
-      if (!choice) { showError('Escolha um alimento para levar.'); return; }
+      if (!choice) { showError('Escolha uma das opções de confirmação.'); return; }
       if (!form.reportValidity()) return;
       if (!requestId) requestId = uniqueRequestId();
       const submit = $('submitButton');
@@ -381,7 +389,7 @@
         if (!data.ok) throw new Error('Não foi possível confirmar agora.');
         requestId = null;
         form.reset(); companions.replaceChildren(); updateTotal();
-        await showVideo({ nome: name, guests, alimento: data.alimento, codigo: data.codigo });
+        await showVideo({ nome: data.nome || name, guests: data.acompanhantes || guests, alimento: data.alimento, codigo: data.codigo });
       } catch (err) {
         const mensagem = mensagemFirebase(err, 'Falha ao registrar. Verifique sua conexão e tente novamente.');
         showError(mensagem);

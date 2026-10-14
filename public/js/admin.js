@@ -1,4 +1,4 @@
-import { chamar, configurado, mensagemFirebase, observarSessao, entrarAdministrador, sairAdministrador } from './firebase-client.js';
+import { chamar, configurado, mensagemFirebase, garantirConvidado, verificarAdmin } from './firebase-client.js';
 const $ = id => document.getElementById(id);
 let foods = [], guests = [], cursor = null, loading = false, activeTab = 'convidados';
 
@@ -20,7 +20,7 @@ function view(tab) {
 }
 $('tabGuests').addEventListener('click', () => view('convidados'));
 $('tabFoods').addEventListener('click', () => view('alimentos'));
-$('logout').addEventListener('click', () => sairAdministrador().catch(err => status(mensagemFirebase(err),true)));
+
 
 async function refresh() {
   if (loading) return;
@@ -173,24 +173,27 @@ $('seedButton').addEventListener('click',async()=>{
   }catch(err){status(mensagemFirebase(err),true)}finally{button.disabled=false}
 });
 
-$('loginForm').addEventListener('submit',async event=>{
-  event.preventDefault();
-  const button=$('loginButton');button.disabled=true;
-  status('Autenticando...');
-  try{await entrarAdministrador($('email').value.trim(),$('password').value);}
-  catch(err){status(mensagemFirebase(err,'Não foi possível entrar. Confira o e-mail e a senha.'),true);}
-  finally{button.disabled=false}
-});
-if (!configurado) {
-  $('loginBox').hidden=false;
-  $('loginButton').disabled=true;
-  status('Painel temporariamente indisponível.',true);
-} else {
-  observarSessao(async user=>{
-    $('dashboard').hidden=true;
-    $('logout').hidden=!user || user.isAnonymous;
-    $('loginBox').hidden=!!user && !user.isAnonymous;
-    if(user && !user.isAnonymous) await refresh();
-    else if(!user) status('Entre com a conta administrativa cadastrada no Firebase.');
-  }).catch(err=>{ $('loginBox').hidden=false; status(mensagemFirebase(err,'Não foi possível abrir o painel.'),true); });
+async function checkAccess() {
+  if (!configurado) { status('Firebase não configurado.',true); return; }
+  status('Verificando acesso do painel...');
+  try {
+    await garantirConvidado();
+    const { liberado, uid } = await verificarAdmin();
+    $('deviceUid').value = uid;
+    $('accessBox').hidden = liberado;
+    $('dashboard').hidden = !liberado;
+    if (liberado) await refresh();
+    else status('Autorize este dispositivo no Firestore para ver os convidados.');
+  } catch(e) {
+    $('accessBox').hidden = false;
+    status(mensagemFirebase(e,'Não foi possível acessar o banco.'),true);
+  }
 }
+$('copyUid').addEventListener('click',async()=>{
+  const id = $('deviceUid').value;
+  if (!id) return;
+  try { await navigator.clipboard.writeText(id); status('Identificador copiado.'); }
+  catch { $('deviceUid').select(); status('Selecione e copie o identificador.'); }
+});
+$('retryAccess').addEventListener('click',checkAccess);
+void checkAccess();

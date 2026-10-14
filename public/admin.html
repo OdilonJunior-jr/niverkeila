@@ -37,19 +37,17 @@
 <main>
   <header class="hero">
     <div><h1>Made in Brasil • 52 anos</h1><p>Painel de convidados e alimentos — sábado, 17/10, a partir das 13h</p></div>
-    <button type="button" id="logout" hidden>Sair do painel</button>
+
   </header>
   <p id="feedback" class="notice" role="status" aria-live="polite" hidden></p>
-  <section id="loginBox" class="panel login-box" hidden>
-    <h2>Entrar como administrador</h2>
-    <p class="muted">Somente contas cadastradas e autorizadas no Firebase podem acessar os convidados.</p>
-    <form id="loginForm">
-      <label for="email">E-mail do administrador</label>
-      <input id="email" type="email" autocomplete="username" required>
-      <label for="password">Senha</label>
-      <input id="password" type="password" autocomplete="current-password" required>
-      <button type="submit" id="loginButton">Entrar no painel</button>
-    </form>
+  <section id="accessBox" class="panel login-box" hidden>
+    <h2>Liberação do painel neste dispositivo</h2>
+    <p class="muted">Sem senha. O administrador só precisa liberar este dispositivo uma vez no Firebase; os convidados não terão acesso aos nomes.</p>
+    <label for="deviceUid">Identificador deste dispositivo</label>
+    <input id="deviceUid" type="text" readonly aria-label="Identificador de acesso">
+    <button type="button" id="copyUid">Copiar identificador</button>
+    <button type="button" class="muted-button" id="retryAccess">Já liberei, abrir painel</button>
+    <p class="muted">No Firebase: Firestore → Dados → Iniciar coleção <strong>admins</strong> → ID do documento = identificador acima → campo <strong>active</strong>, tipo boolean, valor <strong>true</strong>.</p>
   </section>
   <section id="dashboard" hidden>
     <div class="stats">
@@ -75,10 +73,10 @@
       <div class="spaced"><button id="loadMore" type="button" class="muted-button" hidden>Carregar mais convidados</button></div>
     </section>
     <section id="foodsPanel" class="panel" role="tabpanel" aria-labelledby="tabFoods" hidden>
-      <h2>Controle dos alimentos</h2>
+      <h2>Controle dos alimentos</h2><p class="muted">Os convidados já conseguem confirmar presença sem alimento. Para oferecer porções, cadastre os itens e ajuste total e quantidade por confirmação.</p>
 
       <div id="seedPanel" class="hint" hidden>
-        <strong>Alimentos não cadastrados.</strong>
+        <strong>Configure os alimentos quando quiser.</strong>
         <div class="spaced"><button id="seedButton" type="button">Cadastrar os 26 alimentos</button></div>
 
       </div>
