@@ -191,27 +191,41 @@ export async function chamar(nome, parametros = {}) {
   if (nome === 'excluirConfirmacao') {
     const id = String(parametros.id || '');
     if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new Error('Confirmação inválida.');
-    await store.runTransaction(db, async tx => {
-      const guestRef=store.doc(db,'confirmacoes',id);
-      const guest=await tx.get(guestRef);
-      if (!guest.exists()) throw new Error('A confirmação já foi excluída. Atualize o painel.');
-      const record=guest.data();
+    const guestRef = store.doc(db, 'confirmacoes', id);
+    // O painel é autorizado nas regras do Firestore por admins/<uid>.
+    // A confirmação e a devolução de saldo devem ocorrer na MESMA transação.
+    const resultado = await store.runTransaction(db, async tx => {
+      const guest = await tx.get(guestRef);
+      // Remover uma confirmação já excluída também é considerado sucesso.
+      if (!guest.exists()) return { jaExcluido: true, saldoRevisar: false };
+      const record = guest.data();
+      let saldoRevisar = false;
+      // O cancelamento já liberou a porção; nunca devolvê-la novamente.
       if (record.status !== 'cancelado' && record.alimento?.id) {
-        const foodRef=store.doc(db,'alimentos',record.alimento.id);
-        const food=await tx.get(foodRef);
-        // Confirmações antigas podem apontar para um alimento já excluído.
-        // Nesse caso, remova apenas a confirmação: não há estoque a devolver.
+        const foodRef = store.doc(db, 'alimentos', String(record.alimento.id));
+        const food = await tx.get(foodRef);
         if (food.exists()) {
-          const next=round3(Number(food.data().used)-Number(record.alimento.quantidade));
-          if (!Number.isFinite(next) || next < -0.000001) {
-            throw new Error('Saldo do alimento inconsistente; confira os dados antes de excluir.');
+          const used = Number(food.data().used);
+          const qty = Number(record.alimento.quantidade);
+          if (!Number.isFinite(used) || !Number.isFinite(qty) || qty < 0) {
+            // Não alterar quantidade malformada: ainda assim permitir exclusão.
+            saldoRevisar = true;
+          } else {
+            const descontado = round3(used - qty);
+            // Registros antigos podem ter saldos menores que a reserva registrada.
+            // Não bloquear a exclusão nem deixar saldo negativo.
+            if (descontado < -0.000001) saldoRevisar = true;
+            tx.update(foodRef, { used: Math.max(0, descontado) });
           }
-          tx.update(foodRef,{used:Math.max(0,next)});
+        } else {
+          // Se o alimento foi excluído antes, não há estoque a devolver.
+          saldoRevisar = true;
         }
       }
       tx.delete(guestRef);
+      return { jaExcluido: false, saldoRevisar };
     });
-    return {ok:true};
+    return { ok:true, ...resultado };
   }
   if (nome === 'excluirAlimento') {
     const id=String(parametros.id || '');
@@ -292,7 +306,7 @@ export function mensagemFirebase(erro, alternativa='Erro de conexão. Tente nova
   const code=String(erro?.code||'');
   const message=String(erro?.message||'');
   if (/operation-not-allowed/.test(code)) return 'Ative o provedor Anônimo no Firebase Authentication.';
-  if (/permission-denied/.test(code)) return 'Permissão negada. Verifique as regras do Firestore ou o acesso do administrador.';
+  if (/permission-denied/.test(code)) return 'O Firebase bloqueou esta ação. No Firestore → Regras, publique as regras atualizadas com permissão de exclusão para administradores.';
   if (/unavailable|deadline-exceeded|network/.test(code)) return 'Sem conexão com o banco de dados. Tente novamente.';
   if (/already-exists/.test(code)) return 'Este dispositivo já confirmou presença.';
   if (message && !/FirebaseError|INTERNAL ASSERTION|Missing or insufficient permissions/.test(message)) return message;

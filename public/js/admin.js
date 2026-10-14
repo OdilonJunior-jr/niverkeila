@@ -1,4 +1,4 @@
-import { chamar, configurado, mensagemFirebase, garantirConvidado, verificarAdmin } from './firebase-client.js';
+import { chamar, configurado, mensagemFirebase, garantirConvidado, verificarAdmin } from './firebase-client.js?v=exclusao-20261014';
 const $ = id => document.getElementById(id);
 let foods = [], guests = [], cursor = null, loading = false, activeTab = 'convidados', shownGuests = 12, allFoods = false;
 
@@ -129,18 +129,41 @@ $('editGuestForm').addEventListener('submit',async event=>{
   finally{save.disabled=false;}
 });
 async function deleteGuest(g,button) {
-  const extra=g.status==='cancelado' ? '' : ' A porção do alimento será devolvida automaticamente.';
-  if (!window.confirm(`Excluir definitivamente a confirmação de ${g.nome}?${extra}\n\nEssa ação não pode ser desfeita.`)) return;
+  const extra=g.status==='cancelado' ? '' : ' A porção reservada será devolvida automaticamente.';
+  if (!window.confirm(`Excluir definitivamente ${g.nome}?${extra}\n\nEsta ação não pode ser desfeita.`)) return;
   button.disabled=true;
   const originalLabel=button.textContent;
   button.textContent='Excluindo…';
-  status(`Excluindo a confirmação de ${g.nome}...`);
+  const row=button.closest('.guest-row, .guest-card');
+  if (row) row.querySelector('.guest-delete-error')?.remove();
+  status(`Excluindo ${g.nome}...`);
   try {
-    await chamar('excluirConfirmacao',{id:g.id});
+    const resultado=await chamar('excluirConfirmacao',{id:g.id});
+    // Refletir a exclusão imediatamente mesmo se a leitura de atualização falhar.
+    guests=guests.filter(item=>item.id!==g.id);
+    renderGuests();
+    const mensagem=resultado.saldoRevisar
+      ? `${g.nome} excluído. Confira o saldo do alimento no painel, pois havia um registro antigo inconsistente.`
+      : `${g.nome} excluído com sucesso.`;
+    status(mensagem);
+    // Reconta titulares/acompanhantes com dados do Firestore.
+    // Falha de rede no refresh não desfaz uma exclusão já concluída.
     await refresh();
-    status(`Confirmação de ${g.nome} excluída.`);
-  }catch(err){status(mensagemFirebase(err),true);}
-  finally{button.disabled=false;button.textContent=originalLabel;}
+    status(mensagem);
+  } catch(err) {
+    const message=mensagemFirebase(err,'Não foi possível excluir. Tente novamente.');
+    status(message,true);
+    if (row?.isConnected) {
+      const inlineError=document.createElement('p');
+      inlineError.className='guest-delete-error';
+      inlineError.setAttribute('role','alert');
+      inlineError.textContent=message;
+      row.appendChild(inlineError);
+    }
+  } finally {
+    button.disabled=false;
+    button.textContent=originalLabel;
+  }
 }
 $('search').addEventListener('input',()=>{shownGuests=12;renderGuests()});
 $('guestStatus').addEventListener('change',()=>{shownGuests=12;renderGuests()});
