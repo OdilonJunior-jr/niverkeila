@@ -58,7 +58,8 @@ service cloud.firestore {
     }
     match /alimentos/{id} {
       allow read: if true;
-      allow create, delete: if admin();
+      allow create: if admin();
+      allow delete: if admin() && resource.data.used == 0;
       allow update: if admin() || reservaDoConvidado(id) || devolucaoDoConvidado(id);
     }
     function reservaDoConvidado(id) {
@@ -93,11 +94,11 @@ service cloud.firestore {
       allow get: if admin() || (logged() && uid == request.auth.uid);
       allow list: if admin();
       allow create: if validConfirmacao(uid);
-      allow update: if validCancelamento(uid)
+      allow update: if admin() || validCancelamento(uid)
         || (logged() && request.auth.uid == uid
             && resource.data.get('status', 'confirmado') == 'cancelado'
             && validConfirmacao(uid));
-      allow delete: if false;
+      allow delete: if admin();
     }
     match /{document=**} { allow read, write: if false; }
   }

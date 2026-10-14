@@ -146,15 +146,93 @@ export async function chamar(nome, parametros = {}) {
       total:result.total, alimento:result.alimento, status:result.status || 'confirmado' };
   }
   await assertAdmin();
+  // Alterações administrativas são transacionais para manter os saldos exatos.
+  if (nome === 'editarConfirmacao') {
+    const id = String(parametros.id || '');
+    if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new Error('Confirmação inválida.');
+    const guestName = String(parametros.nome || '').trim().replace(/\s+/g, ' ');
+    const companions = parametros.acompanhantes;
+    const foodId = String(parametros.alimento_id || '');
+    if (!checkName(guestName) || !Array.isArray(companions) || companions.length > 12 ||
+        companions.some(n => !checkName(n)) || !/^[a-zA-Z0-9_-]{1,64}$/.test(foodId)) {
+      throw new Error('Confira nome, acompanhantes e alimento.');
+    }
+    const names = companions.map(n => n.trim().replace(/\s+/g, ' '));
+    await store.runTransaction(db, async tx => {
+      const guestRef = store.doc(db, 'confirmacoes', id);
+      const guestSnap = await tx.get(guestRef);
+      if (!guestSnap.exists()) throw new Error('Confirmação não encontrada. Atualize o painel.');
+      const old = guestSnap.data();
+      if (old.status === 'cancelado') throw new Error('Não é possível editar uma confirmação cancelada.');
+      if (!old.alimento?.id) throw new Error('Esta confirmação não possui alimento associado.');
+      const changed = old.alimento.id !== foodId;
+      let selected = old.alimento;
+      if (changed) {
+        const oldRef = store.doc(db, 'alimentos', old.alimento.id);
+        const newRef = store.doc(db, 'alimentos', foodId);
+        // Todas as leituras precisam acontecer antes das escritas na transação.
+        const [oldFood, newFood] = await Promise.all([tx.get(oldRef), tx.get(newRef)]);
+        if (!oldFood.exists() || !newFood.exists()) throw new Error('Um dos alimentos não existe mais.');
+        const oldUsed = round3(Number(oldFood.data().used) - Number(old.alimento.quantidade));
+        if (oldUsed < -0.000001) throw new Error('Saldo inconsistente do alimento anterior.');
+        const f = newFood.data();
+        if (!f.ativo || !(f.por_confirmacao > 0) ||
+            Number(f.used) + Number(f.por_confirmacao) > Number(f.total) + 0.000001) {
+          throw new Error('O novo alimento está indisponível ou sem saldo.');
+        }
+        selected = { id:foodId, nome:f.nome, unidade:f.unidade, quantidade:f.por_confirmacao };
+        tx.update(oldRef, {used: Math.max(0, oldUsed)});
+        tx.update(newRef, {used: round3(Number(f.used) + Number(f.por_confirmacao))});
+      }
+      tx.update(guestRef, {nome:guestName, acompanhantes:names, total:names.length+1, alimento:selected});
+    });
+    return {ok:true};
+  }
+  if (nome === 'excluirConfirmacao') {
+    const id = String(parametros.id || '');
+    if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new Error('Confirmação inválida.');
+    await store.runTransaction(db, async tx => {
+      const guestRef=store.doc(db,'confirmacoes',id);
+      const guest=await tx.get(guestRef);
+      if (!guest.exists()) throw new Error('A confirmação já foi excluída. Atualize o painel.');
+      const record=guest.data();
+      if (record.status !== 'cancelado' && record.alimento?.id) {
+        const foodRef=store.doc(db,'alimentos',record.alimento.id);
+        const food=await tx.get(foodRef);
+        if (!food.exists()) throw new Error('Alimento reservado não encontrado; confira os dados antes de excluir.');
+        const next=round3(Number(food.data().used)-Number(record.alimento.quantidade));
+        if (next < -0.000001) throw new Error('Saldo do alimento inconsistente; confira os dados antes de excluir.');
+        tx.update(foodRef,{used:Math.max(0,next)});
+      }
+      tx.delete(guestRef);
+    });
+    return {ok:true};
+  }
+  if (nome === 'excluirAlimento') {
+    const id=String(parametros.id || '');
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) throw new Error('Alimento inválido.');
+    await store.runTransaction(db, async tx => {
+      const ref=store.doc(db,'alimentos',id);
+      const snap=await tx.get(ref);
+      if (!snap.exists()) throw new Error('Alimento não encontrado.');
+      if (Number(snap.data().used) !== 0) {
+        throw new Error('Esse alimento possui reservas. Exclua ou altere as confirmações que o utilizam antes.');
+      }
+      tx.delete(ref);
+    });
+    return {ok:true};
+  }
   if (nome === 'dadosAdmin') {
     const [f, c] = await Promise.all([
       store.getDocs(store.collection(db, 'alimentos')),
       store.getDocs(store.collection(db, 'confirmacoes'))
     ]);
     const list = foodList(f).map(foodCard);
-    const active = c.docs.filter(d => d.data().status !== 'cancelado');
-    return { ok:true, alimentos:list, estatisticas: { confirmacoes:active.length,
-      pessoas:active.reduce((n,d) => n + (d.data().total||1),0) } };
+    const active = c.docs.map(d=>d.data()).filter(d=>d.status !== 'cancelado');
+    const titulares = active.length;
+    const acompanhantes = active.reduce((n,d) => n + (Array.isArray(d.acompanhantes) ? d.acompanhantes.length : 0), 0);
+    return { ok:true, alimentos:list, estatisticas: { confirmacoes:titulares,
+      acompanhantes, pessoas:titulares+acompanhantes } };
   }
   if (nome === 'paginaConvidados') {
     let q = store.query(store.collection(db,'confirmacoes'),store.orderBy('createdAt','desc'),store.limit(100));

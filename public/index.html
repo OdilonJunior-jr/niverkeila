@@ -31,12 +31,12 @@
     .modal::before { content: ""; display: block; height: 10px; background: linear-gradient(90deg,#007b33 0 30%,#fac529 30% 52%,#ef6b20 52% 74%,#c51a29 74%); }
     .modal-content { padding: 24px 23px 26px; }
     .modal-header { padding-right: 25px; }
-    .eyebrow { color: #b44e13; letter-spacing: .08em; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    .eyebrow { color: #b44e13; letter-spacing: .08em; font-size: 11px; font-weight: 650; text-transform: uppercase; }
     h1 { margin: 6px 0 6px; color: #08602e; font-size: clamp(25px, 6vw, 30px); line-height: 1.14; letter-spacing: -.03em; }
     .lead { margin: 0 0 20px; font-size: 14px; color: #656459; line-height: 1.55; }
     .close-button { position: absolute; top: 20px; right: 17px; display: grid; place-items: center; width: 33px; height: 33px; border: 0; border-radius: 100%; background: #eceddc; color: #235334; font-size: 25px; line-height: 1; cursor: pointer; }
     .field { margin: 17px 0; }
-    label, .field-label { display: block; font-size: 14px; font-weight: 780; margin-bottom: 8px; color: #254a32; }
+    label, .field-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #254a32; }
     label .required { color: #c5232a; }
     input[type="text"] { width: 100%; height: 47px; padding: 12px 14px; font: inherit; font-size: 16px; color: #193927; border: 1.6px solid #d7dccf; border-radius: 13px; background: white; transition: border-color .15s, box-shadow .15s; }
     input[type="text"]:focus { border-color: #14823f; box-shadow: 0 0 0 3px #14823f22; outline: none; }
@@ -45,42 +45,42 @@
     .small-note { color: #777d6f; font-size: 12px; font-weight: 500; }
     .companion-row { display: flex; align-items: center; gap: 8px; margin: 9px 0; }
     .companion-row input { min-width: 0; flex: 1; }
-    .remove { background: #f8e2dd; color: #9d2629; border: 0; border-radius: 12px; width: 42px; height: 46px; flex: 0 0 42px; font-size: 22px; font-weight: bold; cursor: pointer; }
-    .add-button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 13px; border: 2px dashed #209954; border-radius: 12px; background: #edfaed; color: #086b35; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .remove { background: #f8e2dd; color: #9d2629; border: 0; border-radius: 12px; width: 42px; height: 46px; flex: 0 0 42px; font-size: 22px; font-weight: 500; cursor: pointer; }
+    .add-button { width: min(100%, 216px); min-height: 41px; margin: 10px auto 0; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 10px 13px; border: 1px dashed #209954; border-radius: 12px; background: #edfaed; color: #086b35; font-size: 14px; font-weight: 600; cursor: pointer; }
     .plus { display: inline-grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: #147a3c; color: white; font-size: 18px; line-height: 1; }
     .total { margin: 19px 0; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; color: #265238; background: #fff0c2; border-radius: 12px; gap: 8px; font-size: 14px; }
-    .total strong { font-size: 18px; }
-    .primary { width: 100%; min-height: 51px; padding: 12px 18px; border: 2px solid #fff; border-radius: 14px; background: #bf0717; box-shadow: 0 3px 0 #e8af16; color: white; font-size: 17px; font-weight: 900; cursor: pointer; }
+    .total strong { font-size: 17px; font-weight: 600; }
+    .primary { display: block; width: min(100%, 238px); min-height: 42px; padding: 9px 15px; margin: 12px auto 0; border: 1px solid #b90922; border-radius: 12px; background: #c52939; box-shadow: 0 2px 0 #e8ba39; color: white; font: inherit; font-size: 14px; font-weight: 550; line-height: 1.4; text-align: center; cursor: pointer; }
     .primary:disabled { opacity: .65; cursor: not-allowed; }
     .primary.is-busy:disabled { cursor: progress; }
     .primary:hover:not(:disabled) { background: #a90013; }
-    .secondary { display: block; border: 0; padding: 13px 8px; background: transparent; color: #55705c; text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; margin: 7px auto 0; }
+    .secondary { display: block; border: 0; padding: 13px 8px; background: transparent; color: #55705c; text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; margin: 7px auto 0; }
     .error { padding: 11px 12px; margin: 12px 0; color: #8e1c25; background: #fff0ed; border-left: 4px solid #c52b32; border-radius: 7px; font-size: 13px; line-height: 1.5; }
-    .success-icon { width: 68px; height: 68px; margin: 0 auto 12px; display: grid; place-items: center; border: 4px solid #a3d09d; background: #117a3b; color: white; border-radius: 50%; font-size: 37px; font-weight: 900; }
+    .success-icon { width: 68px; height: 68px; margin: 0 auto 12px; display: grid; place-items: center; border: 4px solid #a3d09d; background: #117a3b; color: white; border-radius: 50%; font-size: 37px; font-weight: 650; }
     .success-content { text-align: center; }
     .success-content h1 { font-size: 29px; }
     .receipt { padding: 16px; margin: 18px 0; border-radius: 14px; text-align: left; background: #f1f8e9; border: 1px solid #d1e8cb; font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
     .receipt strong { color: #126b35; }
     .receipt ul { margin: 4px 0 6px; padding-left: 22px; }
-    .receipt-link { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 3px; padding: 12px 10px; border-radius: 12px; background: #0b6a38; color: white; text-decoration: none; font-weight: 800; font-size: 14px; }
+    .receipt-link { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 3px; padding: 12px 10px; border-radius: 12px; background: #0b6a38; color: white; text-decoration: none; font-weight: 600; font-size: 14px; width: min(100%, 232px); margin: 12px auto 3px; }
     .receipt-link:hover { background: #094f2c; }
-    .danger-action { display: block; width: 100%; margin: 16px 0 0; padding: 13px; border: 1px solid #d5b4b3; border-radius: 12px; background: #fff2ef; color: #a5262e; font: inherit; font-size: 14px; font-weight: 760; cursor: pointer; }
+    .danger-action { display: block; width: min(100%, 220px); margin: 14px auto 0; min-height: 42px; padding: 10px 14px; border: 1px solid #d5b4b3; border-radius: 12px; background: #fff2ef; color: #a5262e; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
     .danger-action:disabled { opacity: .6; cursor: wait; }
     .event-summary { background: #fff8e4; border-radius: 12px; padding: 12px; margin: 12px 0; text-align: left; color: #365139; font-size: 13px; line-height: 1.7; }
     .event-summary strong { color: #08602e; }
 
     .tiny { font-size: 12px; line-height: 1.5; color: #777b70; }
     .share-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-    .share-buttons button, .share-buttons a { flex: 1; min-width: 140px; text-align: center; display: inline-flex; align-items: center; justify-content: center; padding: 13px; border-radius: 12px; border: 1px solid #208149; color: #0a662e; text-decoration: none; background: white; font-weight: 800; font-size: 14px; cursor: pointer; }
+    .share-buttons button, .share-buttons a { flex: 1; min-width: 140px; text-align: center; display: inline-flex; align-items: center; justify-content: center; padding: 13px; border-radius: 12px; border: 1px solid #208149; color: #0a662e; text-decoration: none; background: white; font-weight: 600; font-size: 14px; cursor: pointer; }
     .share-buttons .wa { background: #197a43; color: white; }
     .food-list { display: grid; gap: 8px; margin-top: 10px; max-height: 260px; overflow-y: auto; padding: 2px; }
     .food-option { display: flex; align-items: center; gap: 12px; margin: 0; padding: 12px 13px; border: 1.5px solid #e4e8d8; border-radius: 12px; background: white; cursor: pointer; }
     .food-option:has(input:checked) { border-color: #148448; background: #ecf8e9; box-shadow: 0 0 0 2px #14844820; }
     .food-option input { flex-shrink: 0; accent-color: #0d7939; width: 19px; height: 19px; }
-    .food-description { display: flex; flex-direction: column; gap: 3px; font-weight: 800; font-size: 14px; }
-    .food-description small { color: #637363; font-weight: 600; font-size: 12px; }
+    .food-description { display: flex; flex-direction: column; gap: 3px; font-weight: 600; font-size: 14px; }
+    .food-description small { color: #637363; font-weight: 450; font-size: 12px; }
     .loading-foods { padding: 16px 10px; border-radius: 10px; background: #eff5e8; color: #526b54; font-size: 13px; line-height: 1.5; }
-    .refresh-foods { display: block; margin: 10px 0 0 auto; padding: 8px 10px; background: transparent; color: #176b3d; border: 1px solid #b7dbc4; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .refresh-foods { display: block; margin: 10px auto 0; padding: 8px 10px; background: transparent; color: #176b3d; border: 1px solid #b7dbc4; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
     .refresh-foods:disabled { opacity: .55; cursor: wait; }
     .video-content { text-align: center; }
     .video-content h1 { font-size: 24px; }
@@ -91,6 +91,36 @@
     .honeypot { position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; overflow: hidden; }
     @media (max-width: 480px) { .modal-content { padding: 21px 18px 23px; } .overlay { padding: 8px; } .modal { max-height: calc(100dvh - 16px); border-radius: 21px; } }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+    /* Confirmação em duas etapas: pessoas primeiro, alimentos em cards depois. */
+    .step-indicator { display:flex; justify-content:space-between; align-items:center; gap:14px; margin:7px 0 16px; color:#548061; font-size:12px; font-weight:500; }
+    .step-track { height:5px; background:#dce7d6; flex:1; border-radius:999px; overflow:hidden; }
+    .step-track span { display:block; height:100%; width:50%; background:#168448; border-radius:inherit; transition:width .2s ease; }
+    .step-heading { font-size:19px; letter-spacing:-.025em; color:#195c36; line-height:1.3; font-weight:600; margin:4px 0 13px; text-align:center; }
+    .step-subtitle { text-align:center; font-size:13px; color:#637766; line-height:1.5; margin:0 0 14px; }
+    .step-continue { font-weight:550; width:min(100%,175px); margin:13px auto 2px; }
+    .step-actions { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; margin:9px auto 0; }
+    .step-actions .primary { width:min(100%,218px); font-weight:550; margin:5px auto 0; }
+    .step-actions .secondary { margin:0 auto; order:2; }
+    .form-dismiss { margin-top:13px; font-weight:450; }
+    .food-field { margin:8px 0 5px; }
+    .food-field > .row-title { justify-content:center; }
+    .food-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:10px; max-height:min(43dvh,365px); overflow-y:auto; padding:3px 4px 7px; margin-top:9px; overscroll-behavior:contain; }
+    .food-option { display:flex; align-items:center; gap:8px; min-height:91px; padding:14px 12px; border-radius:15px; border:1.5px solid #d6e7d6; background:#fff; box-shadow:0 1px 6px #285c3020; transition:border-color .15s,background .15s,transform .15s; }
+    .food-option:hover { border-color:#86bfa0; transform:translateY(-1px); }
+    .food-option:has(input:checked) { border:2px solid #168448; background:#eafaeb; box-shadow:0 1px 10px #16844820; }
+    .food-option:focus-within { outline:2px solid #0e8b4d; outline-offset:2px; }
+    .food-option input { width:18px; height:18px; margin:0; }
+    .food-description { font-size:13px; line-height:1.38; font-weight:550; min-width:0; overflow-wrap:anywhere; }
+    .food-description small { font-size:11px; line-height:1.45; font-weight:400; color:#667769; }
+    .refresh-foods { margin-top:8px; font-weight:500; }
+    .modal-content .lead { font-weight:400; }
+    .modal-header { text-align:center; padding-right:0; }
+    .eyebrow { font-weight:550; }
+    .field-label, label { font-weight:550; }
+    .primary,.add-button { box-shadow:none; }
+    @media(max-width:390px) { .food-list { gap:7px; } .food-option { min-height:89px; padding:10px 7px; gap:6px; } .food-description { font-size:12px; } .food-description small { font-size:10px; } }
+    @media(max-width:340px) { .food-list { grid-template-columns:1fr; } .food-option { min-height:72px; } }
   </style>
 </head>
 <body>
@@ -109,31 +139,44 @@
         <header class="modal-header">
           <div class="eyebrow">Made in Brasil • 52 anos 🎉</div>
           <h1 id="dialogTitle">Confirme sua presença!</h1>
-          <p class="lead">Informe seu nome, os acompanhantes e escolha um alimento para levar à festa.</p>
+          <p class="lead" id="formLead">Primeiro, diga quem vai com você. Depois, escolha o que levar.</p>
         </header>
         <form id="rsvpForm" autocomplete="on">
-          <div class="field">
-            <label for="guestName">Seu nome <span class="required">*</span></label>
-            <input id="guestName" name="guestName" type="text" minlength="2" maxlength="90" placeholder="Digite seu nome" autocomplete="name" required>
+          <div class="step-indicator" aria-label="Etapa da confirmação">
+            <span id="stepNumber">1 de 2</span>
+            <div class="step-track" aria-hidden="true"><span id="stepProgress"></span></div>
           </div>
-          <div class="field">
-            <div class="row-title"><span class="field-label">Acompanhantes</span><span class="small-note">Até 12 acompanhantes</span></div>
-            <div id="companions"></div>
-            <button type="button" class="add-button" id="addCompanion"><span class="plus" aria-hidden="true">+</span> Adicionar acompanhante</button>
-          </div>
-          <div class="total"><span>Total da confirmação</span><strong id="totalPeople" aria-live="polite">1 pessoa</strong></div>
-          <div class="field">
-            <div class="row-title"><span class="field-label" id="foodLabel">O que você vai levar?</span><span class="small-note">Escolha obrigatória *</span></div>
-            <p class="tiny" style="margin:0">Escolha um alimento disponível para finalizar a confirmação.</p>
-            <div id="foodStatus" class="loading-foods" role="status">Carregando alimentos disponíveis...</div>
-            <div id="foodList" class="food-list" role="group" aria-labelledby="foodLabel" hidden></div>
-            <button type="button" class="refresh-foods" id="refreshFoodsButton">Atualizar alimentos disponíveis</button>
-          </div>
-          <p class="tiny">Seu nome e os acompanhantes informados serão vistos somente pela organização do evento.</p>
+          <section id="stepPeople" aria-labelledby="stepPeopleTitle">
+            <h2 class="step-heading" id="stepPeopleTitle">Quem vai à festa?</h2>
+            <div class="field">
+              <label for="guestName">Seu nome <span class="required">*</span></label>
+              <input id="guestName" name="guestName" type="text" minlength="2" maxlength="90" placeholder="Digite seu nome" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <div class="row-title"><span class="field-label">Acompanhantes</span><span class="small-note">Se houver</span></div>
+              <div id="companions"></div>
+              <button type="button" class="add-button" id="addCompanion"><span class="plus" aria-hidden="true">+</span> Adicionar acompanhante</button>
+            </div>
+            <div class="total"><span>Quem vai</span><strong id="totalPeople" aria-live="polite">1 pessoa</strong></div>
+            <button type="button" class="primary step-continue" id="nextStep">Próximo <span aria-hidden="true">→</span></button>
+          </section>
+          <section id="stepFood" aria-labelledby="stepFoodTitle" hidden>
+            <h2 class="step-heading" id="stepFoodTitle" tabindex="-1">O que você vai levar?</h2>
+            <p class="step-subtitle" id="peopleReview">Escolha uma opção para finalizar.</p>
+            <div class="field food-field">
+              <div class="row-title"><span class="field-label" id="foodLabel">Alimentos disponíveis <span class="required">*</span></span></div>
+              <div id="foodStatus" class="loading-foods" role="status">Carregando alimentos disponíveis...</div>
+              <div id="foodList" class="food-list" role="radiogroup" aria-labelledby="foodLabel" hidden></div>
+              <button type="button" class="refresh-foods" id="refreshFoodsButton">Atualizar opções</button>
+            </div>
+            <div class="step-actions">
+              <button type="button" class="secondary step-back" id="backStep">← Voltar</button>
+              <button type="submit" class="primary" id="submitButton" disabled>Confirmar presença ✓</button>
+            </div>
+          </section>
           <div class="honeypot" aria-hidden="true"><label for="website">Não preencher</label><input type="text" name="website" id="website" tabindex="-1" autocomplete="off"></div>
           <p class="error" id="formError" role="alert" hidden></p>
-          <button type="submit" class="primary" id="submitButton" disabled>Finalizar confirmação ✓</button>
-          <button type="button" class="secondary" id="cancelButton">Voltar ao convite</button>
+          <button type="button" class="secondary form-dismiss" id="cancelButton">Voltar ao convite</button>
         </form>
       </div>
       <div class="modal-content video-content" id="videoContent" hidden>
@@ -185,6 +228,7 @@
     let savedEntry = null;
     let submitBusy = false;
     let checkingSaved = false;
+    let currentStep = 1;
     $('locationButton').href = configuracao.urlLocal;
 
     function uniqueRequestId() {
@@ -207,6 +251,7 @@
       document.body.classList.add('dialog-open');
       error.hidden = true;
       if (!requestId) requestId = uniqueRequestId();
+      setStep(1);
       refreshFoods();
       requestAnimationFrame(() => $('guestName').focus());
     }
@@ -216,6 +261,7 @@
       video.pause();
       video.currentTime = 0;
       overlay.hidden = true;
+      setStep(1);
       document.body.classList.remove('dialog-open');
       if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
     }
@@ -270,7 +316,7 @@
         savedEntry = null;
         confirmedEntry = null;
         requestId = null;
-        form.reset(); companions.replaceChildren(); updateTotal();
+        form.reset(); companions.replaceChildren(); updateTotal(); setStep(1);
         $('successContent').hidden = true;
         $('cancelledContent').hidden = false;
       } catch (err) {
@@ -319,6 +365,39 @@
       companions.appendChild(row); updateTotal(); field.focus();
     }
     add.addEventListener('click', addCompanion);
+    function setStep(next) {
+      currentStep = next;
+      $('stepPeople').hidden = next !== 1;
+      $('stepFood').hidden = next !== 2;
+      $('stepNumber').textContent = `${next} de 2`;
+      $('stepProgress').style.width = `${next * 50}%`;
+      $('formLead').textContent = next === 1
+        ? 'Primeiro, diga quem vai com você. Depois, escolha o que levar.'
+        : 'Agora escolha um alimento. A confirmação só acontece depois desta etapa.';
+      error.hidden = true;
+    }
+    $('nextStep').addEventListener('click', () => {
+      if (submitBusy) return;
+      const fields = [$('guestName'),...companions.querySelectorAll('input')];
+      for (const field of fields) {
+        if (!field.checkValidity() || field.value.trim().replace(/\s+/g,' ').length < 2) {
+          if (field.value.trim().replace(/\s+/g,' ').length < 2) {
+            field.setCustomValidity('Preencha este nome com pelo menos 2 caracteres.');
+            field.addEventListener('input', () => field.setCustomValidity(''),{once:true});
+          }
+          field.reportValidity();field.focus();return;
+        }
+      }
+      const count=1+companions.querySelectorAll('input').length;
+      $('peopleReview').textContent = `${$('guestName').value.trim()}${count>1?` e mais ${count-1} acompanhante${count>2?'s':''}`:''} · ${count} pessoa${count>1?'s':''}`;
+      setStep(2);
+      $('stepFoodTitle').focus();
+    });
+    $('backStep').addEventListener('click', () => {
+      if (submitBusy) return;
+      setStep(1);
+      $('guestName').focus();
+    });
     $('refreshFoodsButton').addEventListener('click', () => { if (!submitBusy) refreshFoods(); });
     $('foodList').addEventListener('change', () => {
       $('submitButton').disabled = !$('foodList').querySelector('input:checked');
@@ -457,11 +536,13 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (submitBusy) return;
+      if (currentStep !== 2) { setStep(1); return; }
       error.hidden = true;
       const name = $('guestName').value.trim().replace(/\s+/g, ' ');
       const guests = [...companions.querySelectorAll('input')].map(input => input.value.trim().replace(/\s+/g, ' '));
       const choice = form.querySelector('input[name="foodChoice"]:checked');
       if (name.length < 2 || guests.some(n => n.length < 2)) {
+        setStep(1);
         showError('Preencha seu nome e o nome de todos os acompanhantes.'); return;
       }
       if (!choice || !choice.value) { showError('Escolha obrigatoriamente um alimento para levar.'); return; }
@@ -479,7 +560,7 @@
         });
         if (!data.ok) throw new Error('Não foi possível confirmar agora.');
         requestId = null;
-        form.reset(); companions.replaceChildren(); updateTotal();
+        form.reset(); companions.replaceChildren(); updateTotal(); setStep(1);
         await showVideo({ nome: data.nome || name, guests: data.acompanhantes || guests, alimento: data.alimento });
       } catch (err) {
         const mensagem = mensagemFirebase(err, 'Falha ao registrar. Verifique sua conexão e tente novamente.');
@@ -489,7 +570,7 @@
         submitBusy = false;
         submit.classList.remove('is-busy');
         submit.disabled = $('foodList').hidden || !form.querySelector('input[name="foodChoice"]:checked');
-        submit.textContent = 'Finalizar confirmação ✓';
+        submit.textContent = 'Confirmar presença ✓';
       }
     });
     // Ao voltar ao convite no mesmo navegador, recupera o resumo do Firestore.

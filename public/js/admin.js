@@ -1,6 +1,6 @@
 import { chamar, configurado, mensagemFirebase, garantirConvidado, verificarAdmin } from './firebase-client.js';
 const $ = id => document.getElementById(id);
-let foods = [], guests = [], cursor = null, loading = false, activeTab = 'convidados';
+let foods = [], guests = [], cursor = null, loading = false, activeTab = 'convidados', shownGuests = 12, allFoods = false;
 
 function status(text, error = false) {
   const el = $('feedback');
@@ -28,12 +28,12 @@ async function refresh() {
   status('Atualizando painel...');
   try {
     const [dashboard, page] = await Promise.all([chamar('dadosAdmin'), chamar('paginaConvidados')]);
-    foods = dashboard.alimentos; guests = page.confirmacoes; cursor = page.cursorSeguinte;
+    foods = dashboard.alimentos; guests = page.confirmacoes; cursor = page.cursorSeguinte; shownGuests = 12;
     const confirmations = dashboard.estatisticas.confirmacoes;
     const people = dashboard.estatisticas.pessoas;
     $('statConfirm').textContent = String(confirmations);
     $('statPeople').textContent = String(people);
-    $('statCompanions').textContent = String(Math.max(0,people-confirmations));
+    $('statCompanions').textContent = String(dashboard.estatisticas.acompanhantes);
     $('statFoods').textContent = String(foods.filter(f=>f.vagas>0).length);
     $('seedPanel').hidden = foods.length !== 0;
     renderFoods(); renderGuests();
@@ -44,76 +44,124 @@ async function refresh() {
 }
 $('refresh').addEventListener('click',refresh);
 
-function makeTextCell(row, text, className = '') {
-  const cell=document.createElement('td');
-  if(className) cell.className=className;
-  cell.textContent = String(text);
-  row.appendChild(cell);
-  return cell;
+function makeInfo(text, className, parent, tag='p') {
+  const el=document.createElement(tag);
+  el.className=className;
+  el.textContent=text;
+  parent.appendChild(el);
+  return el;
 }
 function renderGuests() {
   const rows=$('guestRows'); rows.replaceChildren();
   const search=$('search').value.trim().toLocaleLowerCase('pt-BR');
-  const filtered = guests.filter(g=>[g.nome,...g.acompanhantes,g.alimento?.nome||'',g.codigo]
-    .some(s=>String(s).toLocaleLowerCase('pt-BR').includes(search)));
-  for(const g of filtered) {
-    const row=document.createElement('tr');
-    makeTextCell(row,g.codigo,'code');
-    makeTextCell(row,g.nome);
-    makeTextCell(row,g.acompanhantes.length ? g.acompanhantes.join(', ') : '—');
-    makeTextCell(row,g.total);
-    makeTextCell(row,g.alimento ? `${g.alimento.nome} — ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Não informado');
-    makeTextCell(row,g.status === 'cancelado' ? 'Cancelado (porção liberada)' : 'Confirmado');
-    const when = g.criado_em ? new Date(g.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}) : '—';
-    makeTextCell(row, when);
-    rows.appendChild(row);
+  const state=$('guestStatus').value;
+  const filtered=guests.filter(g=>
+    (state==='todos'||g.status===state)&&
+    [g.nome,...g.acompanhantes,g.alimento?.nome||'',g.codigo]
+      .some(t=>String(t).toLocaleLowerCase('pt-BR').includes(search)));
+  for(const g of filtered.slice(0,shownGuests)) {
+    const article=document.createElement('article');article.className='guest-card';
+    if(g.status==='cancelado') article.classList.add('cancelled');
+    const header=document.createElement('header');header.className='guest-heading';
+    makeInfo(g.nome,'',header,'h3');
+    makeInfo(g.status==='cancelado'?'Cancelado':`${1+g.acompanhantes.length} pessoa(s)`,'guest-pill',header,'span');
+    article.appendChild(header);
+    makeInfo(g.alimento ? `${g.alimento.nome} · ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Alimento não informado','guest-food',article);
+    const count=g.acompanhantes.length;
+    makeInfo(`${count} acompanhante${count===1?'':'s'}`,'guest-count',article);
+    const actions=document.createElement('div');actions.className='row-actions';
+    if(g.status!=='cancelado') {
+      const edit=document.createElement('button');edit.type='button';edit.className='btn-edit';
+      edit.textContent='Editar';edit.setAttribute('aria-label',`Editar confirmação de ${g.nome}`);
+      edit.addEventListener('click',()=>openEditGuest(g));actions.appendChild(edit);
+    }
+    const remove=document.createElement('button');remove.type='button';remove.className='btn-delete';
+    remove.textContent='Excluir';remove.setAttribute('aria-label',`Excluir confirmação de ${g.nome}`);
+    remove.addEventListener('click',()=>deleteGuest(g,remove));actions.appendChild(remove);
+    article.appendChild(actions);
+    const details=document.createElement('details');details.className='guest-details';
+    const summary=document.createElement('summary');summary.textContent='Ver detalhes';details.appendChild(summary);
+    makeInfo(`Código: ${g.codigo}`,'',details);
+    if(count) makeInfo(`Acompanhantes: ${g.acompanhantes.join(', ')}`,'',details);
+    const when=g.criado_em ? new Date(g.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}) : '—';
+    makeInfo(`Registrado em: ${when}`,'',details);
+    article.appendChild(details);rows.appendChild(article);
   }
-  if(!filtered.length) { const row=document.createElement('tr'); const cell=document.createElement('td');cell.colSpan=7;cell.textContent='Nenhum convidado encontrado nesta página.';row.appendChild(cell);rows.appendChild(row); }
-  $('loadMore').hidden = !cursor;
+  if(!filtered.length) makeInfo('Nenhum convidado encontrado.','guest-empty',rows);
+  const more=filtered.length>shownGuests||Boolean(cursor);
+  $('loadMore').hidden=!more;
+  $('loadMore').textContent=filtered.length>shownGuests?'Mostrar mais convidados':'Carregar mais convidados';
 }
-$('search').addEventListener('input',renderGuests);
+let editingGuestId=null;
+function openEditGuest(g) {
+  editingGuestId=g.id;
+  const dialog=$('editGuestDialog');
+  $('editGuestName').value=g.nome;
+  $('editGuestCompanions').value=g.acompanhantes.join('\n');
+  const select=$('editGuestFood');select.replaceChildren();
+  // Oferece alimentos com saldo, mesmo que outra opção tenha esgotado.
+  const options=foods.filter(f=>f.vagas>0 || f.id===g.alimento?.id);
+  for(const f of options) {
+    const o=document.createElement('option');o.value=f.id;
+    o.textContent=`${f.nome}${f.id===g.alimento?.id ? ' (atual)' : ` — ${f.vagas} vaga(s)`}`;
+    select.appendChild(o);
+  }
+  if (g.alimento?.id && !options.some(f=>f.id===g.alimento.id)) {
+    const o=document.createElement('option');o.value=g.alimento.id;
+    o.textContent=`${g.alimento.nome} (atual)`;select.appendChild(o);
+  }
+  select.value=g.alimento?.id||'';
+  $('editGuestError').hidden=true;
+  if (!dialog.open) dialog.showModal();
+}
+$('editGuestClose').addEventListener('click',()=> $('editGuestDialog').close());
+$('editGuestDialog').addEventListener('close',()=>{editingGuestId=null;});
+$('editGuestForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(!editingGuestId) return;
+  const companions=$('editGuestCompanions').value.split(/\r?\n/u).map(x=>x.trim()).filter(Boolean);
+  const save=$('editGuestSave');save.disabled=true;
+  const dialogError=$('editGuestError');dialogError.hidden=true;
+  try {
+    await chamar('editarConfirmacao',{id:editingGuestId,nome:$('editGuestName').value,
+      acompanhantes:companions,alimento_id:$('editGuestFood').value});
+    $('editGuestDialog').close();
+    await refresh();status('Confirmação editada com sucesso.');
+  }catch(err){dialogError.textContent=mensagemFirebase(err);dialogError.hidden=false;}
+  finally{save.disabled=false;}
+});
+async function deleteGuest(g,button) {
+  const extra=g.status==='cancelado' ? '' : ' A porção do alimento será devolvida automaticamente.';
+  if (!window.confirm(`Excluir definitivamente a confirmação de ${g.nome}?${extra}\n\nEssa ação não pode ser desfeita.`)) return;
+  button.disabled=true;
+  try {
+    await chamar('excluirConfirmacao',{id:g.id});
+    await refresh();status(`Confirmação de ${g.nome} excluída.`);
+  }catch(err){status(mensagemFirebase(err),true);}
+  finally{button.disabled=false;}
+}
+$('search').addEventListener('input',()=>{shownGuests=12;renderGuests()});
+$('guestStatus').addEventListener('change',()=>{shownGuests=12;renderGuests()});
 $('loadMore').addEventListener('click',async()=>{
-  if(!cursor) return;
+  if (shownGuests<guests.length) {shownGuests+=12;renderGuests();return;}
+  if (!cursor) return;
   const b=$('loadMore');b.disabled=true;
   try {
     const page=await chamar('paginaConvidados',{cursor});
-    guests.push(...page.confirmacoes);cursor=page.cursorSeguinte;renderGuests();
-  } catch(err){status(mensagemFirebase(err),true)}
-  finally{b.disabled=false}
-});
-
-function exportField(raw) {
-  let text=String(raw??'');
-  // Evita que nomes que comecem com =, +, -, @, etc. sejam executados como fórmula no Excel.
-  if (/^\s*[=+@\-\t\r]/u.test(text)) text="'"+text;
-  return '"'+text.replace(/"/g,'""')+'"';
-}
-$('exportCSV').addEventListener('click',async()=>{
-  const button=$('exportCSV'); button.disabled=true;
-  status('Preparando exportação de todas as confirmações...');
-  try {
-    let all=[], next=null;
-    do {
-      const page=await chamar('paginaConvidados', next ? {cursor:next} : {});
-      all.push(...page.confirmacoes);next=page.cursorSeguinte;
-    } while(next);
-    const lines=[['Código','Data','Convidado','Acompanhantes','Total de pessoas','Alimento','Quantidade','Unidade','Status']];
-    for(const g of all) lines.push([
-      g.codigo,g.criado_em,g.nome,g.acompanhantes.join(' | '),g.total,
-      g.alimento?.nome||'',g.alimento?.quantidade??'',g.alimento?.unidade||'',g.status === 'cancelado' ? 'Cancelado' : 'Confirmado'
-    ]);
-    const csv='\uFEFF'+lines.map(row=>row.map(exportField).join(';')).join('\r\n');
-    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-    const a=document.createElement('a');a.href=url;a.download='convidados-made-in-brasil.csv';a.click();
-    setTimeout(()=>URL.revokeObjectURL(url),1500);
-    status(`${all.length} confirmação(ões) incluída(s) no CSV.`);
+    guests.push(...page.confirmacoes);cursor=page.cursorSeguinte;shownGuests+=12;renderGuests();
   }catch(err){status(mensagemFirebase(err),true)}
-  finally{button.disabled=false}
+  finally{b.disabled=false}
 });
 
 function renderFoods() {
   const grid=$('foodGrid');grid.replaceChildren();
-  for(const [index,food] of foods.entries()) {
+  const search=$('foodSearch').value.trim().toLocaleLowerCase('pt-BR');
+  const matches=foods.filter(f=>f.nome.toLocaleLowerCase('pt-BR').includes(search));
+  const visible = allFoods || search ? matches : matches.slice(0,10);
+  const toggle=$('foodAllToggle');
+  toggle.hidden=Boolean(search)||foods.length<=10;
+  toggle.textContent=allFoods?'Ver menos alimentos':`Ver todos (${foods.length})`;
+  for(const food of visible) {
+    const index=foods.findIndex(f=>f.id===food.id);
     const section=$('foodTemplate').content.firstElementChild.cloneNode(true);
     section.querySelector('.food-name').textContent=`${index+1}. ${food.nome}`;
     const pill=section.querySelector('.pill');
@@ -126,6 +174,15 @@ function renderFoods() {
     form.elements.namedItem('por_confirmacao').value=food.por_confirmacao;
     form.elements.namedItem('ativo').checked=food.ativo;
     section.querySelector('.food-amount').textContent=`Reservado: ${unit(food.used,food.unidade)} · Saldo: ${unit(food.saldo,food.unidade)}`;
+    const deleteButton=section.querySelector('.remove-food');
+    deleteButton.disabled=Number(food.used)>0;
+    deleteButton.title=Number(food.used)>0 ? 'Há porções reservadas; remova ou edite essas confirmações antes.' : 'Excluir alimento sem reservas';
+    deleteButton.addEventListener('click',async()=>{
+      if(!window.confirm(`Excluir o alimento ${food.nome}? Essa ação não pode ser desfeita.`)) return;
+      deleteButton.disabled=true;
+      try{await chamar('excluirAlimento',{id:food.id});await refresh();status(`Alimento ${food.nome} excluído.`);}
+      catch(err){status(mensagemFirebase(err),true)}finally{deleteButton.disabled=false;}
+    });
     form.addEventListener('submit',async event=>{
       event.preventDefault();
       const button=form.querySelector('button[type="submit"]');button.disabled=true;
@@ -136,7 +193,14 @@ function renderFoods() {
       }catch(err){status(mensagemFirebase(err),true)}
       finally{button.disabled=false}
     });
-    grid.appendChild(section);
+    // Cada item fechado ocupa uma linha; os campos de edição aparecem somente ao abrir.
+    const accordion=document.createElement('details');accordion.className='food-accordion';
+    const summary=document.createElement('summary');summary.className='food-summary';
+    makeInfo(food.nome,'food-compact-name',summary,'span');
+    const badge=makeInfo(food.vagas>0?`${food.vagas} vagas`:'Sem vagas','food-compact-vagas',summary,'span');
+    badge.classList.toggle('off',food.vagas<=0);
+    makeInfo('⌄','arrow',summary,'span');
+    accordion.appendChild(summary);accordion.appendChild(section);grid.appendChild(accordion);
   }
   if(foods.length) {
     const section=$('foodTemplate').content.firstElementChild.cloneNode(true);
@@ -148,12 +212,17 @@ function renderFoods() {
     form.reset();form.elements.namedItem('total').value='0';form.elements.namedItem('por_confirmacao').value='1';
     form.elements.namedItem('ativo').checked=true;
     form.querySelector('button[type="submit"]').textContent='Adicionar item';
+    section.querySelector('.remove-food').remove();
     form.addEventListener('submit',async event=>{
       event.preventDefault(); const button=form.querySelector('button[type="submit"]');button.disabled=true;
       try{await chamar('adicionarAlimento',readForm(form));status('Novo alimento criado.');await refresh();}
       catch(err){status(mensagemFirebase(err),true)}finally{button.disabled=false}
     });
-    grid.appendChild(section);
+    const accordion=document.createElement('details');accordion.className='food-accordion food-add-details';
+    const summary=document.createElement('summary');summary.className='food-summary';
+    makeInfo('+ Adicionar alimento','food-compact-name',summary,'span');
+    makeInfo('⌄','arrow',summary,'span');
+    accordion.appendChild(summary);accordion.appendChild(section);grid.appendChild(accordion);
   }
 }
 function readForm(form) {
@@ -165,6 +234,8 @@ function readForm(form) {
     ativo:form.elements.namedItem('ativo').checked
   };
 }
+$('foodSearch').addEventListener('input',renderFoods);
+$('foodAllToggle').addEventListener('click',()=>{allFoods=!allFoods;renderFoods();});
 $('seedButton').addEventListener('click',async()=>{
   const button=$('seedButton');button.disabled=true;
   try{
