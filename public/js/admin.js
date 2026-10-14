@@ -62,13 +62,23 @@ function renderGuests() {
   for(const g of filtered.slice(0,shownGuests)) {
     const article=document.createElement('article');article.className='guest-card';
     if(g.status==='cancelado') article.classList.add('cancelled');
+
+    const main=document.createElement('div');main.className='guest-main';
     const header=document.createElement('header');header.className='guest-heading';
     makeInfo(g.nome,'',header,'h3');
     makeInfo(g.status==='cancelado'?'Cancelado':`${1+g.acompanhantes.length} pessoa(s)`,'guest-pill',header,'span');
-    article.appendChild(header);
-    makeInfo(g.alimento ? `${g.alimento.nome} · ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Alimento não informado','guest-food',article);
+    main.appendChild(header);
+    makeInfo(g.alimento ? `${g.alimento.nome} · ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Alimento não informado','guest-food',main);
+    article.appendChild(main);
+
+    const meta=document.createElement('div');meta.className='guest-meta';
     const count=g.acompanhantes.length;
-    makeInfo(`${count} acompanhante${count===1?'':'s'}`,'guest-count',article);
+    makeInfo(`Acompanhantes: ${count}`,'guest-count',meta);
+    makeInfo(`Código: ${g.codigo}`,'guest-code',meta);
+    const when=g.criado_em ? new Date(g.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}) : '—';
+    makeInfo(`Confirmado em: ${when}`,'guest-date',meta);
+    article.appendChild(meta);
+
     const actions=document.createElement('div');actions.className='row-actions';
     if(g.status!=='cancelado') {
       const edit=document.createElement('button');edit.type='button';edit.className='btn-edit';
@@ -79,13 +89,14 @@ function renderGuests() {
     remove.textContent='Excluir';remove.setAttribute('aria-label',`Excluir confirmação de ${g.nome}`);
     remove.addEventListener('click',()=>deleteGuest(g,remove));actions.appendChild(remove);
     article.appendChild(actions);
+
     const details=document.createElement('details');details.className='guest-details';
     const summary=document.createElement('summary');summary.textContent='Ver detalhes';details.appendChild(summary);
-    makeInfo(`Código: ${g.codigo}`,'',details);
-    if(count) makeInfo(`Acompanhantes: ${g.acompanhantes.join(', ')}`,'',details);
-    const when=g.criado_em ? new Date(g.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}) : '—';
-    makeInfo(`Registrado em: ${when}`,'',details);
-    article.appendChild(details);rows.appendChild(article);
+    if(count) makeInfo(`Nomes dos acompanhantes: ${g.acompanhantes.join(', ')}`,'',details);
+    else makeInfo('Sem acompanhantes informados.','',details);
+    article.appendChild(details);
+
+    rows.appendChild(article);
   }
   if(!filtered.length) makeInfo('Nenhum convidado encontrado.','guest-empty',rows);
   const more=filtered.length>shownGuests||Boolean(cursor);
