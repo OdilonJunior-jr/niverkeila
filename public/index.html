@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#075a2c">
-  <meta name="description" content="Made in Brasil — comemoração de 52 anos! 17/10, sábado, a partir das 13 horas, no Capão da Onça.">
+  <meta name="description" content="Made in Brasil — comemoração de 52 anos! 17/10, sábado, a partir das 13 horas, em Av. São Paulo, 1374, Jardim Indianópolis, Uberaba/MG.">
   <title>Made in Brasil | 52 anos — Confirme sua presença</title>
   <link rel="preload" as="image" href="assets/convite.png">
   <style>
@@ -15,11 +15,10 @@
     body.dialog-open { overflow: hidden; }
     .artboard { position: relative; width: min(100%, 580px); margin-inline: auto; line-height: 0; }
     .poster { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
-    /* Botões são elementos clicáveis reais, sobre a área vazia da arte.
-       Usar percentuais mantém as posições corretas no celular e desktop. */
-    .hero-actions { position: absolute; z-index: 2; top: 71.0%; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0; }
-    .hero-action { display: block; width: 42%; height: auto; border: 0; padding: 0; margin: 0; background: none; line-height: 0; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s ease, filter .15s ease; }
-    .hero-action + .hero-action { margin-top: -1.5%; }
+    /* Botão de confirmação clicável, centralizado na área livre da arte.
+       Percentuais garantem alinhamento responsivo no celular e desktop. */
+    .hero-actions { position: absolute; z-index: 2; top: 70.9%; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
+    .hero-action { display: block; width: 54%; max-width: 330px; height: auto; border: 0; padding: 0; margin: 0; background: none; line-height: 0; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s ease, filter .15s ease; }
     .hero-action img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; }
     .hero-action:hover { transform: scale(1.045); filter: brightness(1.06); }
     .hero-action:active { transform: scale(.97); }
@@ -126,8 +125,7 @@
 <body>
   <main class="artboard" aria-label="Convite: Made in Brasil, 52 anos">
     <img class="poster" src="assets/convite.png" alt="Convite Made in Brasil, 52 anos. Gratidão por tudo que vivi e por tudo que ainda vou viver! Sábado, 17 de outubro, às 13 horas." width="941" height="1672" fetchpriority="high">
-    <div class="hero-actions" aria-label="Localização e confirmação de presença">
-      <a class="hero-action" id="locationButton" target="_blank" rel="noopener noreferrer" aria-label="Abrir localização Capão da Onça, Rufinópolis, no Google Maps" title="Capão da Onça"><img src="assets/botao-local.png" alt="Capão da Onça" width="2048" height="682" loading="eager"></a>
+    <div class="hero-actions" aria-label="Confirmação de presença">
       <button class="hero-action" id="rsvpButton" type="button" aria-label="Abrir formulário para confirmar presença" title="Confirmar presença"><img src="assets/botao-confirmar.png" alt="Confirmar presença" width="2048" height="682" loading="eager"></button>
     </div>
   </main>
@@ -209,7 +207,7 @@
     import { chamar, garantirConvidado, configurado, mensagemFirebase } from "./js/firebase-client.js";
     'use strict';
     const configuracao = {
-      urlLocal: 'https://www.google.com/maps?q=-19.739625930786133,-48.38064193725586&z=17&hl=pt-BR',
+      urlLocal: 'https://www.google.com/maps/search/?api=1&query=Av.%20S%C3%A3o%20Paulo%2C%201374%20-%20Jardim%20Indian%C3%B3polis%2C%20Uberaba%20-%20MG%2C%2038072-590',
       limiteAcompanhantes: 12
     };
     const $ = (id) => document.getElementById(id);
@@ -228,7 +226,6 @@
     let submitBusy = false;
     let checkingSaved = false;
     let currentStep = 1;
-    $('locationButton').href = configuracao.urlLocal;
 
     function uniqueRequestId() {
       if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -482,7 +479,7 @@
       if (confirmedEntry.alimento) addLine('Você vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
       addLine('Data: ', 'Sábado, 17/10');
       addLine('Horário: ', '13 horas');
-      addLine('Local: ', 'Capão da Onça — Rufinópolis');
+      addLine('Local: ', 'Av. São Paulo, 1374 — Jardim Indianópolis, Uberaba/MG');
       $('receiptMaps').href = configuracao.urlLocal;
       $('cancelError').hidden = true;
       $('finishButton').focus();

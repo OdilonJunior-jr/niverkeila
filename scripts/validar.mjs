@@ -3,7 +3,7 @@ const files = [
   'public/index.html','public/admin.html','public/firebase-config.js',
   'public/js/firebase-client.js','public/js/admin.js',
   'public/assets/convite.png','public/assets/confirmacao.mp4',
-  'public/assets/botao-local.png','public/assets/botao-confirmar.png',
+  'public/assets/botao-confirmar.png',
   'firestore.rules','firebase.json','vercel.json'
 ];
 for (const path of files) {
@@ -21,5 +21,6 @@ if (!rules.includes('validCancelamento(uid)') || !rules.includes('reserveOk(d.al
 const page = readFileSync('public/index.html','utf8');
 if (page.includes('Somente confirmar presença') || page.includes("addLine('Confirmação: '") || page.includes("addLine('Total: '")) throw new Error('Texto antigo de confirmação encontrado');
 if (!page.includes('id="receiptMaps"') || !page.includes('id="cancelConfirmation"')) throw new Error('Resumo/Maps/cancelamento ausentes');
+if (page.includes('locationButton') || page.includes('botao-local.png')) throw new Error('Botão antigo de localização presente');
 console.log('OK: arquivo do convite, painel sem login, Firestore, arte e vídeo.');
 console.log('OK: raiz organizada para Vercel, sem Cloud Functions e sem PHP.');
