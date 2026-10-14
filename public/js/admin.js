@@ -52,35 +52,30 @@ function makeInfo(text, className, parent, tag='p') {
   return el;
 }
 function renderGuests() {
-  const rows=$('guestRows'); rows.replaceChildren();
+  const rows=$('guestRows');rows.replaceChildren();
   const search=$('search').value.trim().toLocaleLowerCase('pt-BR');
   const state=$('guestStatus').value;
-  const filtered=guests.filter(g=>
-    (state==='todos'||g.status===state)&&
-    [g.nome,...g.acompanhantes,g.alimento?.nome||'',g.codigo]
+  const filtered=guests.filter(g =>
+    (state==='todos'||g.status===state) &&
+    [g.nome,...g.acompanhantes,g.alimento?.nome||'']
       .some(t=>String(t).toLocaleLowerCase('pt-BR').includes(search)));
   for(const g of filtered.slice(0,shownGuests)) {
-    const article=document.createElement('article');article.className='guest-card';
-    if(g.status==='cancelado') article.classList.add('cancelled');
-
-    const main=document.createElement('div');main.className='guest-main';
-    const header=document.createElement('header');header.className='guest-heading';
-    makeInfo(g.nome,'',header,'h3');
-    makeInfo(g.status==='cancelado'?'Cancelado':`${1+g.acompanhantes.length} pessoa(s)`,'guest-pill',header,'span');
-    main.appendChild(header);
-    makeInfo(g.alimento ? `${g.alimento.nome} · ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Alimento não informado','guest-food',main);
-    article.appendChild(main);
-
-    const meta=document.createElement('div');meta.className='guest-meta';
-    const count=g.acompanhantes.length;
-    makeInfo(`Acompanhantes: ${count}`,'guest-count',meta);
-    makeInfo(`Código: ${g.codigo}`,'guest-code',meta);
-    const when=g.criado_em ? new Date(g.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}) : '—';
-    makeInfo(`Confirmado em: ${when}`,'guest-date',meta);
-    article.appendChild(meta);
-
+    const line=document.createElement('article');line.className='guest-card';
+    if(g.status==='cancelado')line.classList.add('cancelled');
+    makeInfo(g.nome,'guest-name',line,'h3');
+    makeInfo(g.alimento ? `${g.alimento.nome} · ${unit(g.alimento.quantidade,g.alimento.unidade)}` : 'Alimento não informado','guest-food',line);
+    const count=Array.isArray(g.acompanhantes)?g.acompanhantes.length:0;
+    const participants=document.createElement('div');participants.className='guest-participants';
+    makeInfo(`${count} acompanhante${count===1?'':'s'}`,'guest-count',participants,'span');
+    if(count){
+      const details=document.createElement('details');details.className='guest-details';
+      const summary=document.createElement('summary');summary.textContent='Nomes';details.appendChild(summary);
+      makeInfo(g.acompanhantes.join(', '),'',details);participants.appendChild(details);
+    }
+    line.appendChild(participants);
+    makeInfo(g.status==='cancelado'?'Cancelado':'Confirmado','guest-pill',line,'span');
     const actions=document.createElement('div');actions.className='row-actions';
-    if(g.status!=='cancelado') {
+    if(g.status!=='cancelado'){
       const edit=document.createElement('button');edit.type='button';edit.className='btn-edit';
       edit.textContent='Editar';edit.setAttribute('aria-label',`Editar confirmação de ${g.nome}`);
       edit.addEventListener('click',()=>openEditGuest(g));actions.appendChild(edit);
@@ -88,15 +83,8 @@ function renderGuests() {
     const remove=document.createElement('button');remove.type='button';remove.className='btn-delete';
     remove.textContent='Excluir';remove.setAttribute('aria-label',`Excluir confirmação de ${g.nome}`);
     remove.addEventListener('click',()=>deleteGuest(g,remove));actions.appendChild(remove);
-    article.appendChild(actions);
-
-    const details=document.createElement('details');details.className='guest-details';
-    const summary=document.createElement('summary');summary.textContent='Ver detalhes';details.appendChild(summary);
-    if(count) makeInfo(`Nomes dos acompanhantes: ${g.acompanhantes.join(', ')}`,'',details);
-    else makeInfo('Sem acompanhantes informados.','',details);
-    article.appendChild(details);
-
-    rows.appendChild(article);
+    line.appendChild(actions);
+    rows.appendChild(line);
   }
   if(!filtered.length) makeInfo('Nenhum convidado encontrado.','guest-empty',rows);
   const more=filtered.length>shownGuests||Boolean(cursor);
@@ -144,11 +132,15 @@ async function deleteGuest(g,button) {
   const extra=g.status==='cancelado' ? '' : ' A porção do alimento será devolvida automaticamente.';
   if (!window.confirm(`Excluir definitivamente a confirmação de ${g.nome}?${extra}\n\nEssa ação não pode ser desfeita.`)) return;
   button.disabled=true;
+  const originalLabel=button.textContent;
+  button.textContent='Excluindo…';
+  status(`Excluindo a confirmação de ${g.nome}...`);
   try {
     await chamar('excluirConfirmacao',{id:g.id});
-    await refresh();status(`Confirmação de ${g.nome} excluída.`);
+    await refresh();
+    status(`Confirmação de ${g.nome} excluída.`);
   }catch(err){status(mensagemFirebase(err),true);}
-  finally{button.disabled=false;}
+  finally{button.disabled=false;button.textContent=originalLabel;}
 }
 $('search').addEventListener('input',()=>{shownGuests=12;renderGuests()});
 $('guestStatus').addEventListener('change',()=>{shownGuests=12;renderGuests()});

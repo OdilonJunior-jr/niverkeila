@@ -199,10 +199,15 @@ export async function chamar(nome, parametros = {}) {
       if (record.status !== 'cancelado' && record.alimento?.id) {
         const foodRef=store.doc(db,'alimentos',record.alimento.id);
         const food=await tx.get(foodRef);
-        if (!food.exists()) throw new Error('Alimento reservado não encontrado; confira os dados antes de excluir.');
-        const next=round3(Number(food.data().used)-Number(record.alimento.quantidade));
-        if (next < -0.000001) throw new Error('Saldo do alimento inconsistente; confira os dados antes de excluir.');
-        tx.update(foodRef,{used:Math.max(0,next)});
+        // Confirmações antigas podem apontar para um alimento já excluído.
+        // Nesse caso, remova apenas a confirmação: não há estoque a devolver.
+        if (food.exists()) {
+          const next=round3(Number(food.data().used)-Number(record.alimento.quantidade));
+          if (!Number.isFinite(next) || next < -0.000001) {
+            throw new Error('Saldo do alimento inconsistente; confira os dados antes de excluir.');
+          }
+          tx.update(foodRef,{used:Math.max(0,next)});
+        }
       }
       tx.delete(guestRef);
     });
