@@ -120,6 +120,34 @@
     .primary,.add-button { box-shadow:none; }
     @media(max-width:390px) { .food-list { gap:7px; } .food-option { min-height:89px; padding:10px 7px; gap:6px; } .food-description { font-size:12px; } .food-description small { font-size:10px; } }
     @media(max-width:340px) { .food-list { grid-template-columns:1fr; } .food-option { min-height:72px; } }
+
+    .floating-attractions { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, calc(env(safe-area-inset-bottom) + 12px)); z-index: 35; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+    .floating-attractions button { border: 0; background: transparent; padding: 0; cursor: pointer; line-height: 0; -webkit-tap-highlight-color: transparent; }
+    .floating-attractions img { display: block; width: min(34vw, 190px); height: auto; filter: drop-shadow(0 10px 18px rgba(0,0,0,.28)); }
+    .floating-attractions button:hover img { transform: translateY(-2px) scale(1.02); }
+    .floating-attractions button img { transition: transform .18s ease; }
+    .floating-attractions button.pulse { animation: floatPulse 2.3s ease-in-out infinite; }
+    @keyframes floatPulse { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.03); } }
+    .attractions-panel { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: max(92px, calc(env(safe-area-inset-bottom) + 92px)); z-index: 36; width: min(92vw, 320px); background: #fffaf1; border: 2px solid #fff; border-radius: 22px; box-shadow: 0 18px 42px rgba(0,0,0,.28); overflow: hidden; }
+    .attractions-panel[hidden] { display:none !important; }
+    .attractions-panel::before { content:''; display:block; height:8px; background: linear-gradient(90deg,#007b33 0 32%,#fac529 32% 54%,#ef6b20 54% 76%,#c51a29 76%); }
+    .attractions-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 10px; }
+    .attractions-head strong { color:#075a2c; font-size:16px; }
+    .attractions-close { width:30px; height:30px; border-radius:50%; background:#f0efdf !important; color:#184729; font-size:22px; }
+    .attractions-list { display:grid; gap:10px; padding:0 14px 14px; }
+    .attraction-card { display:flex; gap:12px; align-items:center; padding:10px; border-radius:16px; background:#fff; border:1px solid #e6e2d4; box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+    .attraction-card img { width:74px; height:74px; object-fit:cover; border-radius:14px; flex:0 0 74px; }
+    .attraction-info { min-width:0; }
+    .attraction-info strong { display:block; color:#0a5f31; font-size:15px; line-height:1.2; }
+    .attraction-info span { display:block; margin-top:4px; color:#6c7165; font-size:12px; line-height:1.4; }
+    .attractions-backdrop { position: fixed; inset: 0; z-index: 34; background: rgba(16,31,20,.28); backdrop-filter: blur(2px); }
+    .attractions-backdrop[hidden] { display:none !important; }
+    @media (max-width: 420px) {
+      .floating-attractions img { width: min(42vw, 168px); }
+      .attractions-panel { width: min(94vw, 310px); right: 10px; bottom: calc(env(safe-area-inset-bottom) + 84px); }
+      .attraction-card img { width:68px; height:68px; flex-basis:68px; }
+    }
+
   </style>
 </head>
 <body>
@@ -129,6 +157,36 @@
       <button class="hero-action" id="rsvpButton" type="button" aria-label="Abrir formulário para confirmar presença" title="Confirmar presença"><img src="assets/botao-confirmar.png" alt="Confirmar presença" width="2048" height="682" loading="eager"></button>
     </div>
   </main>
+
+
+  <div class="floating-attractions" aria-label="Atrações confirmadas">
+    <button type="button" id="openAttractions" class="pulse" aria-haspopup="dialog" aria-expanded="false" aria-controls="attractionsPanel" title="Ver atrações confirmadas">
+      <img src="assets/atracoes-confirmadas.png" alt="Atrações confirmadas">
+    </button>
+  </div>
+  <div id="attractionsBackdrop" class="attractions-backdrop" hidden></div>
+  <section id="attractionsPanel" class="attractions-panel" hidden aria-label="Bandas confirmadas">
+    <div class="attractions-head">
+      <strong>Atrações confirmadas</strong>
+      <button type="button" id="closeAttractions" class="attractions-close" aria-label="Fechar atrações">×</button>
+    </div>
+    <div class="attractions-list">
+      <article class="attraction-card">
+        <img src="assets/bruno-robson.jpg" alt="Bruno e Robson">
+        <div class="attraction-info">
+          <strong>Bruno e Robson</strong>
+          <span>Presença confirmada para animar a festa.</span>
+        </div>
+      </article>
+      <article class="attraction-card">
+        <img src="assets/kitocada.jpg" alt="Kitocada">
+        <div class="attraction-info">
+          <strong>Kitocada</strong>
+          <span>Mais uma atração confirmada para o evento.</span>
+        </div>
+      </article>
+    </div>
+  </section>
 
   <div id="overlay" class="overlay" hidden>
     <section id="dialog" class="modal" role="dialog" aria-modal="true" aria-label="Confirmação de presença" tabindex="-1">
@@ -212,6 +270,10 @@
     };
     const $ = (id) => document.getElementById(id);
     const overlay = $('overlay');
+    const attractionsBackdrop = $('attractionsBackdrop');
+    const attractionsPanel = $('attractionsPanel');
+    const openAttractionsButton = $('openAttractions');
+    const closeAttractionsButton = $('closeAttractions');
     const form = $('rsvpForm');
     const companions = $('companions');
     const add = $('addCompanion');
@@ -227,6 +289,18 @@
     let checkingSaved = false;
     let currentStep = 1;
 
+    function openAttractions() {
+      attractionsPanel.hidden = false;
+      attractionsBackdrop.hidden = false;
+      openAttractionsButton.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('dialog-open');
+    }
+    function closeAttractions() {
+      attractionsPanel.hidden = true;
+      attractionsBackdrop.hidden = true;
+      openAttractionsButton.setAttribute('aria-expanded', 'false');
+      if (overlay.hidden) document.body.classList.remove('dialog-open');
+    }
     function uniqueRequestId() {
       if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
       return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
@@ -258,7 +332,7 @@
       video.currentTime = 0;
       overlay.hidden = true;
       setStep(1);
-      document.body.classList.remove('dialog-open');
+      if (attractionsPanel.hidden) document.body.classList.remove('dialog-open');
       if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
     }
     function openSaved(entry, returning = false) {
@@ -571,6 +645,13 @@
     });
     // Ao voltar ao convite no mesmo navegador, recupera o resumo do Firestore.
     void checkSaved(true).catch(() => { /* O convite ainda pode abrir sem rede. */ });
+
+    openAttractionsButton.addEventListener('click', () => {
+      if (attractionsPanel.hidden) openAttractions(); else closeAttractions();
+    });
+    closeAttractionsButton.addEventListener('click', closeAttractions);
+    attractionsBackdrop.addEventListener('click', closeAttractions);
+
   </script>
 </body>
 </html>
