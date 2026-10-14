@@ -136,7 +136,9 @@
     .attractions-head strong { color:#075a2c; font-size:16px; }
     .attractions-close { width:30px; height:30px; border-radius:50%; background:#f0efdf !important; color:#184729; font-size:22px; }
     .attractions-list { display:grid; gap:10px; padding:0 14px 14px; }
-    .attraction-card { display:flex; gap:12px; align-items:center; padding:10px; border-radius:16px; background:#fff; border:1px solid #e6e2d4; box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+    .attraction-card { display:flex; gap:12px; align-items:center; padding:10px; border-radius:16px; background:#fff; border:1px solid #e6e2d4; box-shadow: 0 2px 12px rgba(0,0,0,.05); text-decoration:none; color:inherit; cursor:pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+    .attraction-card:hover { border-color:#8cc79c; background:#f4fbf2; transform:translateY(-2px); }
+    .attraction-card:focus-visible { outline:3px solid #178346; outline-offset:2px; }
     .attraction-card img { width:74px; height:74px; object-fit:cover; border-radius:14px; flex:0 0 74px; }
     .attraction-info { min-width:0; }
     .attraction-info strong { display:block; color:#0a5f31; font-size:15px; line-height:1.2; }
@@ -170,18 +172,18 @@
       <button type="button" id="closeAttractions" class="attractions-close" aria-label="Fechar atrações">×</button>
     </div>
     <div class="attractions-list">
-      <article class="attraction-card">
+      <a class="attraction-card" href="https://www.instagram.com/brunoerobson/" target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram de Bruno e Robson em nova aba">
         <img src="assets/bruno-robson.jpg" alt="Bruno e Robson">
         <div class="attraction-info">
           <strong>Bruno e Robson</strong>
         </div>
-      </article>
-      <article class="attraction-card">
+      </a>
+      <a class="attraction-card" href="https://www.instagram.com/kitocadaoficial/" target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram de Kitocada em nova aba">
         <img src="assets/kitocada.jpg" alt="Kitocada">
         <div class="attraction-info">
           <strong>Kitocada</strong>
         </div>
-      </article>
+      </a>
     </div>
   </section>
 
