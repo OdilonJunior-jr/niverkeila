@@ -145,15 +145,6 @@
 
   </header>
   <p id="feedback" class="notice" role="status" aria-live="polite" hidden></p>
-  <section id="accessBox" class="panel login-box" hidden>
-    <h2>Liberação do painel neste dispositivo</h2>
-    <p class="muted">Sem senha. O administrador só precisa liberar este dispositivo uma vez no Firebase; os convidados não terão acesso aos nomes.</p>
-    <label for="deviceUid">Identificador deste dispositivo</label>
-    <input id="deviceUid" type="text" readonly aria-label="Identificador de acesso">
-    <button type="button" id="copyUid">Copiar identificador</button>
-    <button type="button" class="muted-button" id="retryAccess">Já liberei, abrir painel</button>
-    <p class="muted">No Firebase: Firestore → Dados → Iniciar coleção <strong>admins</strong> → ID do documento = identificador acima → campo <strong>active</strong>, tipo boolean, valor <strong>true</strong>.</p>
-  </section>
   <section id="dashboard" hidden>
     <div class="stats">
       <div class="stat"><strong id="statConfirm">0</strong><span>Convidados confirmados</span></div>
@@ -228,6 +219,6 @@
     </form>
   </section>
 </template>
-<script type="module" src="./js/admin.js?v=exclusao-20261014"></script>
+<script type="module" src="./js/admin.js?v=admin-direto-20261014"></script>
 </body>
 </html>

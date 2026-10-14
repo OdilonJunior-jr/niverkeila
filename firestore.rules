@@ -2,10 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function logged() { return request.auth != null; }
-    function admin() {
-      return logged() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
-    }
+    // ATENÇÃO: acesso administrativo público, sem controle por dispositivo.
+    // Qualquer usuário (inclusive anônimo) autenticado pode consultar e
+    // administrar confirmações e alimentos. O caminho /admin.html NÃO é proteção.
+    function admin() { return logged(); }
     function validConfirmacao(uid) {
       let d = request.resource.data;
       return logged() && request.auth.uid == uid
@@ -53,7 +53,7 @@ service cloud.firestore {
         && (resource.data.alimento == null || devolucaoOk(resource.data.alimento));
     }
     match /admins/{uid} {
-      allow get: if logged() && request.auth.uid == uid;
+      allow get: if false;
       allow list, create, update, delete: if false;
     }
     match /alimentos/{id} {

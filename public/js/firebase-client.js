@@ -67,8 +67,8 @@ function rowData(d) {
     status:r.status === 'cancelado' ? 'cancelado' : 'confirmado', cancelado_em:r.cancelado_em || null };
 }
 async function assertAdmin() {
-  const admin = await verificarAdmin();
-  if (!admin.liberado) throw Object.assign(new Error('Este dispositivo não foi autorizado como administrador.'), { code:'permission-denied' });
+  // Painel público, conforme solicitado: sem liberação por dispositivo.
+  await garantirConvidado();
 }
 export async function chamar(nome, parametros = {}) {
   const { db, store } = await conectar();
@@ -306,7 +306,7 @@ export function mensagemFirebase(erro, alternativa='Erro de conexão. Tente nova
   const code=String(erro?.code||'');
   const message=String(erro?.message||'');
   if (/operation-not-allowed/.test(code)) return 'Ative o provedor Anônimo no Firebase Authentication.';
-  if (/permission-denied/.test(code)) return 'O Firebase bloqueou esta ação. No Firestore → Regras, publique as regras atualizadas com permissão de exclusão para administradores.';
+  if (/permission-denied/.test(code)) return 'O Firebase bloqueou esta ação. Publique o arquivo firestore.rules desta mesma versão em Firestore → Regras.';
   if (/unavailable|deadline-exceeded|network/.test(code)) return 'Sem conexão com o banco de dados. Tente novamente.';
   if (/already-exists/.test(code)) return 'Este dispositivo já confirmou presença.';
   if (message && !/FirebaseError|INTERNAL ASSERTION|Missing or insufficient permissions/.test(message)) return message;

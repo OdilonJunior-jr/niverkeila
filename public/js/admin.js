@@ -1,4 +1,4 @@
-import { chamar, configurado, mensagemFirebase, garantirConvidado, verificarAdmin } from './firebase-client.js?v=exclusao-20261014';
+import { chamar, configurado, mensagemFirebase, garantirConvidado } from './firebase-client.js?v=admin-direto-20261014';
 const $ = id => document.getElementById(id);
 let foods = [], guests = [], cursor = null, loading = false, activeTab = 'convidados', shownGuests = 12, allFoods = false;
 
@@ -271,27 +271,15 @@ $('seedButton').addEventListener('click',async()=>{
   }catch(err){status(mensagemFirebase(err),true)}finally{button.disabled=false}
 });
 
-async function checkAccess() {
-  if (!configurado) { status('Firebase não configurado.',true); return; }
-  status('Verificando acesso do painel...');
+async function abrirPainel() {
+  if (!configurado) {status('Firebase não configurado.', true);return;}
+  $('dashboard').hidden = false;
   try {
+    // A autenticação anônima acontece sem nenhuma tela de login.
     await garantirConvidado();
-    const { liberado, uid } = await verificarAdmin();
-    $('deviceUid').value = uid;
-    $('accessBox').hidden = liberado;
-    $('dashboard').hidden = !liberado;
-    if (liberado) await refresh();
-    else status('Autorize este dispositivo no Firestore para ver os convidados.');
-  } catch(e) {
-    $('accessBox').hidden = false;
-    status(mensagemFirebase(e,'Não foi possível acessar o banco.'),true);
+    await refresh();
+  } catch (e) {
+    status(mensagemFirebase(e,'Não foi possível abrir o painel.'), true);
   }
 }
-$('copyUid').addEventListener('click',async()=>{
-  const id = $('deviceUid').value;
-  if (!id) return;
-  try { await navigator.clipboard.writeText(id); status('Identificador copiado.'); }
-  catch { $('deviceUid').select(); status('Selecione e copie o identificador.'); }
-});
-$('retryAccess').addEventListener('click',checkAccess);
-void checkAccess();
+void abrirPainel();
