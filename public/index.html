@@ -156,6 +156,19 @@
       .attraction-card img { width:68px; height:68px; flex-basis:68px; }
     }
 
+
+    /* Aviso discreto na área livre inferior do convite, sem modificar a arte. */
+    .cooler-notice {
+      position: absolute; z-index: 2; top: 93%; left: 50%;
+      transform: translateX(-50%); width: max-content; max-width: 92%;
+      margin: 0; padding: 6px 12px;
+      border: 1px solid rgba(229, 195, 105, .65); border-radius: 999px;
+      background: rgba(255, 250, 229, .92); color: #185b35;
+      font-size: clamp(10px, 2.85vw, 13px); font-weight: 550;
+      line-height: 1.35; text-align: center; letter-spacing: -.012em;
+      white-space: nowrap; pointer-events: none;
+      box-shadow: 0 2px 7px rgba(68, 52, 20, .10);
+    }
   </style>
 </head>
 <body>
@@ -169,6 +182,7 @@
         <img src="assets/atracoes-confirmadas.png" alt="Atrações confirmadas">
       </button>
     </div>
+    <p class="cooler-notice">🧊 Traga sua bebida preferida no cooler!</p>
   </main>
   <div id="attractionsBackdrop" class="attractions-backdrop" hidden></div>
   <section id="attractionsPanel" class="attractions-panel" hidden aria-label="Bandas confirmadas">
