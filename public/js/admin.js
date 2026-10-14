@@ -1,5 +1,4 @@
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-import { auth, chamar, configurado, mensagemFirebase } from './firebase-client.js';
+import { chamar, configurado, mensagemFirebase, observarSessao, entrarAdministrador, sairAdministrador } from './firebase-client.js';
 const $ = id => document.getElementById(id);
 let foods = [], guests = [], cursor = null, loading = false, activeTab = 'convidados';
 
@@ -21,7 +20,7 @@ function view(tab) {
 }
 $('tabGuests').addEventListener('click', () => view('convidados'));
 $('tabFoods').addEventListener('click', () => view('alimentos'));
-$('logout').addEventListener('click', () => signOut(auth).catch(err => status(mensagemFirebase(err),true)));
+$('logout').addEventListener('click', () => sairAdministrador().catch(err => status(mensagemFirebase(err),true)));
 
 async function refresh() {
   if (loading) return;
@@ -39,7 +38,7 @@ async function refresh() {
     $('seedPanel').hidden = foods.length !== 0;
     renderFoods(); renderGuests();
     $('dashboard').hidden = false;
-    status('Painel atualizado. As confirmações são reais e salvas no Firestore.');
+    status('Painel atualizado.');
   } catch(err) { status(mensagemFirebase(err,'Não foi possível carregar o painel.'),true); }
   finally { loading = false; }
 }
@@ -169,7 +168,7 @@ $('seedButton').addEventListener('click',async()=>{
   const button=$('seedButton');button.disabled=true;
   try{
     await chamar('inicializarAlimentos');
-    status('Os 26 alimentos foram cadastrados com total zero. Configure cada quantidade.');
+    status('Alimentos cadastrados.');
     await refresh();
   }catch(err){status(mensagemFirebase(err),true)}finally{button.disabled=false}
 });
@@ -178,20 +177,20 @@ $('loginForm').addEventListener('submit',async event=>{
   event.preventDefault();
   const button=$('loginButton');button.disabled=true;
   status('Autenticando...');
-  try{await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value);}
+  try{await entrarAdministrador($('email').value.trim(),$('password').value);}
   catch(err){status(mensagemFirebase(err,'Não foi possível entrar. Confira o e-mail e a senha.'),true);}
   finally{button.disabled=false}
 });
 if (!configurado) {
   $('loginBox').hidden=false;
   $('loginButton').disabled=true;
-  status('Configure public/firebase-config.js antes de publicar o painel.',true);
+  status('Painel temporariamente indisponível.',true);
 } else {
-  onAuthStateChanged(auth,async user=>{
+  observarSessao(async user=>{
     $('dashboard').hidden=true;
-    $('logout').hidden=!user;
+    $('logout').hidden=!user || user.isAnonymous;
     $('loginBox').hidden=!!user && !user.isAnonymous;
     if(user && !user.isAnonymous) await refresh();
     else if(!user) status('Entre com a conta administrativa cadastrada no Firebase.');
-  });
+  }).catch(err=>{ $('loginBox').hidden=false; status(mensagemFirebase(err,'Não foi possível abrir o painel.'),true); });
 }

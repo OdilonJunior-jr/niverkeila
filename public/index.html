@@ -19,8 +19,8 @@
     .hotspot:hover { background: rgba(255,255,255,.10); }
     .hotspot:active { background: rgba(255,255,255,.19); }
     .hotspot:focus-visible { outline: 3px solid #154e25; outline-offset: 3px; }
-    .location-hotspot { left: 20.2%; top: 80.35%; width: 59.8%; height: 6.95%; }
-    .rsvp-hotspot { left: 17.1%; top: 88.55%; width: 65.7%; height: 7.49%; }
+    .location-hotspot { left: 21%; top: 81%; width: 60%; height: 7.6%; }
+    .rsvp-hotspot { left: 17%; top: 89.3%; width: 66.6%; height: 8.5%; }
     [hidden] { display: none !important; }
     .overlay { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 12px; background: rgba(9,39,23,.75); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); overflow-y: auto; }
     .modal { position: relative; width: min(100%, 480px); max-height: calc(100dvh - 24px); overflow-y: auto; border-radius: 24px; background: #fff9ec; box-shadow: 0 22px 65px rgba(0,0,0,.33); border: 3px solid #fff; }
@@ -47,7 +47,8 @@
     .total { margin: 19px 0; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; color: #265238; background: #fff0c2; border-radius: 12px; gap: 8px; font-size: 14px; }
     .total strong { font-size: 18px; }
     .primary { width: 100%; min-height: 51px; padding: 12px 18px; border: 2px solid #fff; border-radius: 14px; background: #bf0717; box-shadow: 0 3px 0 #e8af16; color: white; font-size: 17px; font-weight: 900; cursor: pointer; }
-    .primary:disabled { opacity: .65; cursor: progress; }
+    .primary:disabled { opacity: .65; cursor: not-allowed; }
+    .primary.is-busy:disabled { cursor: progress; }
     .primary:hover:not(:disabled) { background: #a90013; }
     .secondary { display: block; border: 0; padding: 13px 8px; background: transparent; color: #55705c; text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; margin: 7px auto 0; }
     .error { padding: 11px 12px; margin: 12px 0; color: #8e1c25; background: #fff0ed; border-left: 4px solid #c52b32; border-radius: 7px; font-size: 13px; line-height: 1.5; }
@@ -68,6 +69,8 @@
     .food-description { display: flex; flex-direction: column; gap: 3px; font-weight: 800; font-size: 14px; }
     .food-description small { color: #637363; font-weight: 600; font-size: 12px; }
     .loading-foods { padding: 16px 10px; border-radius: 10px; background: #eff5e8; color: #526b54; font-size: 13px; line-height: 1.5; }
+    .refresh-foods { display: block; margin: 10px 0 0 auto; padding: 8px 10px; background: transparent; color: #176b3d; border: 1px solid #b7dbc4; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .refresh-foods:disabled { opacity: .55; cursor: wait; }
     .video-content { text-align: center; }
     .video-content h1 { font-size: 24px; }
     .video-wrap { margin: 14px auto; position: relative; max-width: 280px; background: #101d13; border-radius: 16px; overflow: hidden; }
@@ -87,7 +90,7 @@
   </main>
 
   <div id="overlay" class="overlay" hidden>
-    <section id="dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" tabindex="-1">
+    <section id="dialog" class="modal" role="dialog" aria-modal="true" aria-label="Confirmação de presença" tabindex="-1">
       <button type="button" class="close-button" id="closeDialog" aria-label="Fechar janela">×</button>
       <div class="modal-content" id="formContent">
         <header class="modal-header">
@@ -111,6 +114,7 @@
             <p class="tiny" style="margin:0">A quantidade indicada vale para a confirmação inteira, com ou sem acompanhantes.</p>
             <div id="foodStatus" class="loading-foods" role="status">Carregando alimentos disponíveis...</div>
             <div id="foodList" class="food-list" role="group" aria-labelledby="foodLabel" hidden></div>
+            <button type="button" class="refresh-foods" id="refreshFoodsButton">Atualizar alimentos disponíveis</button>
           </div>
           <p class="tiny">Seu nome e os acompanhantes informados serão vistos somente pela organização do evento.</p>
           <div class="honeypot" aria-hidden="true"><label for="website">Não preencher</label><input type="text" name="website" id="website" tabindex="-1" autocomplete="off"></div>
@@ -125,6 +129,7 @@
         <p class="lead">Preparamos uma mensagem especial para você. Assista com som!</p>
         <div class="video-wrap"><video id="confirmationVideo" src="assets/confirmacao.mp4" preload="metadata" playsinline webkit-playsinline aria-label="Vídeo de agradecimento"></video></div>
         <button class="primary video-action" type="button" id="playVideoButton" hidden>▶ Assistir com áudio</button>
+        <button class="secondary" type="button" id="skipVideoButton" hidden>Ver confirmação</button>
         <p id="videoStatus" class="video-status" aria-live="polite">Iniciando o vídeo...</p>
       </div>
       <div class="modal-content success-content" id="successContent" hidden>
@@ -155,17 +160,7 @@
     let loadVersion = 0;
     let requestId = null;
     let confirmedEntry = null;
-    let stockRefreshTimer = null;
-    function stopStockRefresh() {
-      if (stockRefreshTimer) clearInterval(stockRefreshTimer);
-      stockRefreshTimer = null;
-    }
-    function startStockRefresh() {
-      stopStockRefresh();
-      stockRefreshTimer = setInterval(() => {
-        if (!overlay.hidden && !$('formContent').hidden && !$('submitButton').dataset.saving) refreshFoods();
-      }, 20000);
-    }
+    let submitBusy = false;
     $('locationButton').href = configuracao.urlLocal;
 
     function uniqueRequestId() {
@@ -177,7 +172,9 @@
       error.hidden = false;
     }
     function showDialog() {
+      if (submitBusy || !overlay.hidden) return;
       lastFocus = document.activeElement;
+      confirmedEntry = null;
       $('formContent').hidden = false;
       $('videoContent').hidden = true;
       $('successContent').hidden = true;
@@ -186,12 +183,11 @@
       error.hidden = true;
       if (!requestId) requestId = uniqueRequestId();
       refreshFoods();
-      startStockRefresh();
       requestAnimationFrame(() => $('guestName').focus());
     }
     function hideDialog() {
+      if (submitBusy) return;
       loadVersion++;
-      stopStockRefresh();
       video.pause();
       video.currentTime = 0;
       overlay.hidden = true;
@@ -239,6 +235,7 @@
       companions.appendChild(row); updateTotal(); field.focus();
     }
     add.addEventListener('click', addCompanion);
+    $('refreshFoodsButton').addEventListener('click', () => { if (!submitBusy) refreshFoods(); });
 
     const displayQty = (quantity, unit) => {
       const number = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(quantity);
@@ -251,6 +248,8 @@
     async function refreshFoods() {
       const version = ++loadVersion;
       const chosen = form.querySelector('input[name="foodChoice"]:checked')?.value;
+      const reload = $('refreshFoodsButton');
+      reload.disabled = true;
       $('submitButton').disabled = true;
       $('foodList').hidden = true;
       $('foodStatus').hidden = false;
@@ -259,7 +258,7 @@
         if (!configurado) throw new Error('Firebase ainda não foi configurado pelo organizador.');
         const data = await chamar('listarAlimentos');
         if (!data.ok || !Array.isArray(data.alimentos)) throw new Error('Não foi possível carregar os alimentos.');
-        if (version !== loadVersion || overlay.hidden) return;
+        if (version !== loadVersion || overlay.hidden || submitBusy) return;
         const list = $('foodList');
         list.replaceChildren();
         data.alimentos.forEach(food => {
@@ -278,17 +277,19 @@
           list.appendChild(option);
         });
         if (data.alimentos.length === 0) {
-          $('foodStatus').textContent = 'Os alimentos ainda não foram liberados pelo organizador ou todas as cotas estão preenchidas. Aguarde a atualização da lista.';
+          $('foodStatus').textContent = 'Nenhum alimento disponível no momento.';
           return;
         }
         $('foodStatus').hidden = true;
         list.hidden = false;
         $('submitButton').disabled = false;
       } catch (err) {
-        if (version !== loadVersion || overlay.hidden) return;
+        if (version !== loadVersion || overlay.hidden || submitBusy) return;
         $('foodStatus').textContent = !configurado
-          ? 'O convite ainda não foi conectado ao Firebase. O organizador precisa concluir a configuração.'
-          : mensagemFirebase(err, 'Não foi possível carregar os alimentos. Tente novamente em instantes.');
+          ? 'Confirmações temporariamente indisponíveis.'
+          : mensagemFirebase(err, 'Não foi possível carregar os alimentos. Tente novamente.');
+      } finally {
+        if (version === loadVersion) reload.disabled = false;
       }
     }
 
@@ -313,11 +314,11 @@
     }
     async function showVideo(entry) {
       confirmedEntry = entry;
-      stopStockRefresh();
       $('formContent').hidden = true;
       $('successContent').hidden = true;
       $('videoContent').hidden = false;
       $('playVideoButton').hidden = true;
+      $('skipVideoButton').hidden = true;
       $('videoStatus').textContent = 'Iniciando vídeo com áudio...';
       video.pause();
       video.currentTime = 0;
@@ -340,24 +341,23 @@
         $('playVideoButton').hidden = true;
         $('videoStatus').textContent = 'Vídeo com áudio em reprodução.';
       } catch {
-        $('videoStatus').textContent = 'Não foi possível reproduzir automaticamente. Use os controles do vídeo.';
+        $('videoStatus').textContent = 'Use os controles do vídeo para reproduzir.';
         video.controls = true;
       }
     });
+    $('skipVideoButton').addEventListener('click', showThanks);
     video.addEventListener('ended', showThanks);
     video.addEventListener('error', () => {
       if (!confirmedEntry || $('videoContent').hidden) return;
       $('videoStatus').textContent = 'Não foi possível abrir o vídeo, mas sua presença já foi confirmada.';
       $('playVideoButton').hidden = true;
+      $('skipVideoButton').hidden = false;
       video.controls = false;
-      const skip = document.createElement('button');
-      skip.type = 'button'; skip.className = 'primary'; skip.textContent = 'Ver confirmação';
-      skip.addEventListener('click', showThanks, { once: true });
-      $('videoContent').appendChild(skip);
     });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (submitBusy) return;
       error.hidden = true;
       const name = $('guestName').value.trim().replace(/\s+/g, ' ');
       const guests = [...companions.querySelectorAll('input')].map(input => input.value.trim().replace(/\s+/g, ' '));
@@ -369,7 +369,8 @@
       if (!form.reportValidity()) return;
       if (!requestId) requestId = uniqueRequestId();
       const submit = $('submitButton');
-      submit.disabled = true; submit.dataset.saving = '1'; submit.textContent = 'Salvando sua confirmação...';
+      submitBusy = true;
+      submit.disabled = true; submit.classList.add('is-busy'); submit.textContent = 'Salvando sua confirmação...';
       try {
         if (!configurado) throw new Error('Firebase ainda não foi configurado.');
         await garantirConvidado();
@@ -383,10 +384,11 @@
         await showVideo({ nome: name, guests, alimento: data.alimento, codigo: data.codigo });
       } catch (err) {
         const mensagem = mensagemFirebase(err, 'Falha ao registrar. Verifique sua conexão e tente novamente.');
-        if (String(err?.code || '').includes('failed-precondition')) refreshFoods();
         showError(mensagem);
+        if (String(err?.code || '').includes('failed-precondition')) void refreshFoods();
       } finally {
-        delete submit.dataset.saving;
+        submitBusy = false;
+        submit.classList.remove('is-busy');
         submit.disabled = $('foodList').hidden;
         submit.textContent = 'Finalizar confirmação ✓';
       }

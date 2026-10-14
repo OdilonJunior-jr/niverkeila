@@ -64,7 +64,7 @@
     </div>
     <section id="guestsPanel" class="panel" role="tabpanel" aria-labelledby="tabGuests">
       <h2>Confirmações e acompanhantes</h2>
-      <p class="muted">Uma linha representa uma confirmação. A cota do alimento não é multiplicada pelo número de acompanhantes.</p>
+
       <div class="actions">
         <button type="button" id="exportCSV">Exportar CSV</button>
         <button type="button" id="refresh" class="muted-button">Atualizar painel</button>
@@ -76,12 +76,11 @@
     </section>
     <section id="foodsPanel" class="panel" role="tabpanel" aria-labelledby="tabFoods" hidden>
       <h2>Controle dos alimentos</h2>
-      <p class="muted">Administre o total e a quantidade por confirmação. Alimentos sem saldo suficiente deixam de aparecer para os convidados automaticamente.</p>
-      <div class="hint"><strong>Exemplo:</strong> Almôndegas = 100 unidades no total, 25 por confirmação, portanto 4 confirmações. Amendoim = 1000 g no total, 500 g por confirmação, portanto 2 confirmações. Os totais reais devem ser definidos por você.</div>
+
       <div id="seedPanel" class="hint" hidden>
-        <strong>Preparação inicial:</strong> os 26 alimentos originais ainda não estão cadastrados.
+        <strong>Alimentos não cadastrados.</strong>
         <div class="spaced"><button id="seedButton" type="button">Cadastrar os 26 alimentos</button></div>
-        <p class="small">Todos começam com total zero. Depois configure as quantidades antes de divulgar o convite.</p>
+
       </div>
       <div class="food-grid" id="foodGrid"></div>
     </section>
