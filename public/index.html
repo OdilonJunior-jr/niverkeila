@@ -3,17 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#075a2c">
+  <meta name="theme-color" content="#f7efde">
   <meta name="description" content="Made in Brasil — comemoração de 52 anos! 17/10, sábado, a partir das 13 horas, em Av. São Paulo, 1374, Jardim Indianópolis, Uberaba/MG.">
   <title>Made in Brasil | 52 anos — Confirme sua presença</title>
   <link rel="preload" as="image" href="assets/convite.png">
   <style>
     :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #25352b; background: #f7efde; }
     *, *::before, *::after { box-sizing: border-box; }
-    html { min-height: 100%; }
-    body { margin: 0; min-height: 100vh; background: #f7efde; }
+    /* Ajusta a arte inteira à área visível, sem rolar o cartaz para fora da tela.
+       O fundo e a cor das barras do navegador combinam com o papel do convite. */
+    html { min-height: 100%; background: #f7efde; overscroll-behavior-y: none; }
+    body { margin: 0; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; justify-content: center; background: #f7efde; overflow-x: clip; overscroll-behavior-y: none; }
     body.dialog-open { overflow: hidden; }
-    .artboard { position: relative; width: min(100%, 580px); margin-inline: auto; line-height: 0; }
+    .artboard { position: relative; flex: 0 0 auto; width: min(100%, 580px, 56.28svh); margin-inline: auto; line-height: 0; }
+    @media (max-width: 600px) { .artboard { width: min(100%, 56.28svh); } }
     .poster { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
     /* Botão de confirmação clicável, centralizado na área livre da arte.
        Percentuais garantem alinhamento responsivo no celular e desktop. */
