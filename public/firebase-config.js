@@ -1,12 +1,14 @@
-// Cole aqui a configuração PÚBLICA do aplicativo Web do Firebase.
-// Firebase Console > Configurações do projeto > Seus apps > Web > SDK setup/config.
-// Estes campos não são senhas. NUNCA coloque chaves de conta de serviço aqui.
+// Configuração pública do aplicativo Web cadastrado no Firebase (projeto niverkeila-18d30).
+// Não coloque senhas ou chaves de contas de serviço neste arquivo.
 export const firebaseConfig = {
-  apiKey: "COLE_AQUI_API_KEY",
-  authDomain: "SEU_PROJECT_ID.firebaseapp.com",
-  projectId: "SEU_PROJECT_ID",
-  appId: "COLE_AQUI_APP_ID",
+  apiKey: "AIzaSyBkT-wNPYbfYwwbTcbPc9BXPgxAkzd8gLk",
+  authDomain: "niverkeila-18d30.firebaseapp.com",
+  projectId: "niverkeila-18d30",
+  storageBucket: "niverkeila-18d30.firebasestorage.app",
+  messagingSenderId: "470047150183",
+  appId: "1:470047150183:web:1264c326ef89b9af6d04c2",
+  measurementId: "G-T7YCWZRLYD"
 };
 
-// Região das Cloud Functions definida em functions/index.js.
+// Mesma região configurada em functions/index.js.
 export const functionsRegion = "southamerica-east1";
