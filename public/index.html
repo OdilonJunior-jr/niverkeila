@@ -15,12 +15,16 @@
     body.dialog-open { overflow: hidden; }
     .artboard { position: relative; width: min(100%, 580px); margin-inline: auto; line-height: 0; }
     .poster { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
-    .hotspot { position: absolute; z-index: 2; border: 0; padding: 0; background: transparent; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: rgba(255,255,255,.18); touch-action: manipulation; }
-    .hotspot:hover { background: rgba(255,255,255,.10); }
-    .hotspot:active { background: rgba(255,255,255,.19); }
-    .hotspot:focus-visible { outline: 3px solid #154e25; outline-offset: 3px; }
-    .location-hotspot { left: 21%; top: 81%; width: 60%; height: 7.6%; }
-    .rsvp-hotspot { left: 17%; top: 89.3%; width: 66.6%; height: 8.5%; }
+    /* Botões são elementos clicáveis reais, sobre a área vazia da arte.
+       Usar percentuais mantém as posições corretas no celular e desktop. */
+    .hero-actions { position: absolute; z-index: 2; top: 71.0%; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .hero-action { display: block; width: 42%; height: auto; border: 0; padding: 0; margin: 0; background: none; line-height: 0; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s ease, filter .15s ease; }
+    .hero-action + .hero-action { margin-top: -1.5%; }
+    .hero-action img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; }
+    .hero-action:hover { transform: scale(1.045); filter: brightness(1.06); }
+    .hero-action:active { transform: scale(.97); }
+    .hero-action:focus-visible { outline: 3px solid #154e25; outline-offset: 3px; border-radius: 12px; }
+    @media (prefers-reduced-motion: reduce) { .hero-action { transition: none; } }
     [hidden] { display: none !important; }
     .overlay { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 12px; background: rgba(9,39,23,.75); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); overflow-y: auto; }
     .modal { position: relative; width: min(100%, 480px); max-height: calc(100dvh - 24px); overflow-y: auto; border-radius: 24px; background: #fff9ec; box-shadow: 0 22px 65px rgba(0,0,0,.33); border: 3px solid #fff; }
@@ -84,9 +88,11 @@
 </head>
 <body>
   <main class="artboard" aria-label="Convite: Made in Brasil, 52 anos">
-    <img class="poster" src="assets/convite.png" alt="Convite Made in Brasil, 52 anos. Gratidão por tudo que vivi e por tudo que ainda vou viver! 17 de outubro, sábado, a partir das 13 horas. Capão da Onça. Toque nos botões de localização ou confirmar presença." width="941" height="1672">
-    <a class="hotspot location-hotspot" id="locationButton" target="_blank" rel="noopener noreferrer" aria-label="Abrir localização Capão da Onça, Rufinópolis, no Google Maps" title="Ver localização"></a>
-    <button class="hotspot rsvp-hotspot" id="rsvpButton" type="button" aria-label="Abrir formulário para confirmar presença" title="Confirmar presença"></button>
+    <img class="poster" src="assets/convite.png" alt="Convite Made in Brasil, 52 anos. Gratidão por tudo que vivi e por tudo que ainda vou viver! Sábado, 17 de outubro, às 13 horas." width="941" height="1672" fetchpriority="high">
+    <div class="hero-actions" aria-label="Localização e confirmação de presença">
+      <a class="hero-action" id="locationButton" target="_blank" rel="noopener noreferrer" aria-label="Abrir localização Capão da Onça, Rufinópolis, no Google Maps" title="Capão da Onça"><img src="assets/botao-local.png" alt="Capão da Onça" width="2048" height="682" loading="eager"></a>
+      <button class="hero-action" id="rsvpButton" type="button" aria-label="Abrir formulário para confirmar presença" title="Confirmar presença"><img src="assets/botao-confirmar.png" alt="Confirmar presença" width="2048" height="682" loading="eager"></button>
+    </div>
   </main>
 
   <div id="overlay" class="overlay" hidden>
