@@ -14,13 +14,39 @@
        O fundo e a cor das barras do navegador combinam com o papel do convite. */
     html { min-height: 100%; background: #f7efde; overscroll-behavior-y: none; }
     body { margin: 0; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; justify-content: center; background: #f7efde; overflow-x: clip; overscroll-behavior-y: none; }
-    body.dialog-open { overflow: hidden; }
+    body.dialog-open { overflow: hidden; position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; }
+    body.dialog-open .overlay, body.dialog-open .modal { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+    .artboard[aria-hidden="true"] { pointer-events: none; }
     .artboard { position: relative; flex: 0 0 auto; width: min(100%, 580px, 56.28svh); margin-inline: auto; line-height: 0; }
     @media (max-width: 600px) { .artboard { width: min(100%, 56.28svh); } }
     .poster { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+
+    /* Ícone de localização pequeno acima da confirmação, animado sem mover a área clicável. */
+    .map-pin-action {
+      position: absolute; z-index: 3; top: 67%; left: 50%;
+      transform: translateX(-50%);
+      width: clamp(34px, 9.2%, 54px);
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; cursor: pointer; line-height: 0;
+      -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    }
+    .map-pin-action img {
+      display: block; width: 100%; height: auto; pointer-events: none;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.19));
+      animation: mapPinFloat 2.4s ease-in-out infinite;
+    }
+    .map-pin-action:hover img { filter: drop-shadow(0 4px 6px rgba(0,0,0,.24)) brightness(1.04); }
+    .map-pin-action:focus-visible { outline: 3px solid #0e723d; outline-offset: 3px; }
+    @keyframes mapPinFloat {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    @media (prefers-reduced-motion: reduce) { .map-pin-action img { animation: none; } }
+
     /* Botão de confirmação clicável, centralizado na área livre da arte.
        Percentuais garantem alinhamento responsivo no celular e desktop. */
-    .hero-actions { position: absolute; z-index: 2; top: 70.9%; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
+    .hero-actions { position: absolute; z-index: 2; top: 73.3%; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
     .hero-action { display: block; width: 54%; max-width: 330px; height: auto; border: 0; padding: 0; margin: 0; background: none; line-height: 0; cursor: pointer; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s ease, filter .15s ease; }
     .hero-action img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; }
     .hero-action:hover { transform: scale(1.045); filter: brightness(1.06); }
@@ -28,8 +54,8 @@
     .hero-action:focus-visible { outline: 3px solid #154e25; outline-offset: 3px; border-radius: 12px; }
     @media (prefers-reduced-motion: reduce) { .hero-action { transition: none; } }
     [hidden] { display: none !important; }
-    .overlay { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 12px; background: rgba(9,39,23,.75); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); overflow-y: auto; }
-    .modal { position: relative; width: min(100%, 480px); max-height: calc(100dvh - 24px); overflow-y: auto; border-radius: 24px; background: #fff9ec; box-shadow: 0 22px 65px rgba(0,0,0,.33); border: 3px solid #fff; }
+    .overlay { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 12px; background: rgba(9,39,23,.75); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); overflow-y: auto; overscroll-behavior: contain; width: 100%; height: 100dvh; }
+    .modal { position: relative; width: min(100%, 480px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; border-radius: 24px; background: #fff9ec; box-shadow: 0 22px 65px rgba(0,0,0,.33); border: 3px solid #fff; }
     .modal::before { content: ""; display: block; height: 10px; background: linear-gradient(90deg,#007b33 0 30%,#fac529 30% 52%,#ef6b20 52% 74%,#c51a29 74%); }
     .modal-content { padding: 24px 23px 26px; }
     .modal-header { padding-right: 25px; }
@@ -179,6 +205,9 @@
 <body>
   <main class="artboard" aria-label="Convite: Made in Brasil, 52 anos">
     <img class="poster" src="assets/convite.png" alt="Convite Made in Brasil, 52 anos. Gratidão por tudo que vivi e por tudo que ainda vou viver! Sábado, 17 de outubro, às 13 horas." width="941" height="1672" fetchpriority="high">
+    <a class="map-pin-action" href="https://www.google.com/maps/search/?api=1&query=Av.%20S%C3%A3o%20Paulo%2C%201374%20-%20Jardim%20Indian%C3%B3polis%2C%20Uberaba%20-%20MG%2C%2038072-590" target="_blank" rel="noopener noreferrer" aria-label="Abrir localização da festa no Google Maps: Avenida São Paulo, 1374, Jardim Indianópolis, Uberaba, MG" title="Abrir localização no Google Maps">
+      <img src="assets/localizacao-tropical.png" alt="" width="320" height="320" loading="eager">
+    </a>
     <div class="hero-actions" aria-label="Confirmação de presença">
       <button class="hero-action" id="rsvpButton" type="button" aria-label="Abrir formulário para confirmar presença" title="Confirmar presença"><img src="assets/botao-confirmar.png" alt="Confirmar presença" width="2048" height="682" loading="eager"></button>
     </div>
@@ -222,7 +251,7 @@
           <h1 id="dialogTitle">Confirme sua presença!</h1>
           <p class="lead" id="formLead">Primeiro, diga quem vai com você. Depois, escolha o que levar.</p>
         </header>
-        <form id="rsvpForm" autocomplete="on">
+        <form id="rsvpForm" autocomplete="on" onsubmit="return false">
           <div class="step-indicator" aria-label="Etapa da confirmação">
             <span id="stepNumber">1 de 2</span>
             <div class="step-track" aria-hidden="true"><span id="stepProgress"></span></div>
@@ -334,6 +363,15 @@
       error.textContent = message;
       error.hidden = false;
     }
+    // Isola a janela do convite para que o fechamento do teclado no iPhone
+    // não repasse um toque para a imagem que está por trás.
+    function lockInvite(isOpen) {
+      const art = document.querySelector('.artboard');
+      art.inert = isOpen;
+      if (isOpen) art.setAttribute('aria-hidden', 'true');
+      else art.removeAttribute('aria-hidden');
+      document.body.classList.toggle('dialog-open', isOpen || !attractionsPanel.hidden);
+    }
     function showDialog() {
       if (submitBusy || !overlay.hidden) return;
       lastFocus = document.activeElement;
@@ -343,7 +381,7 @@
       $('videoContent').hidden = true;
       $('successContent').hidden = true;
       overlay.hidden = false;
-      document.body.classList.add('dialog-open');
+      lockInvite(true);
       error.hidden = true;
       if (!requestId) requestId = uniqueRequestId();
       setStep(1);
@@ -357,7 +395,7 @@
       video.currentTime = 0;
       overlay.hidden = true;
       setStep(1);
-      if (attractionsPanel.hidden) document.body.classList.remove('dialog-open');
+      lockInvite(false);
       if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
     }
     function openSaved(entry, returning = false) {
@@ -366,7 +404,7 @@
       confirmedEntry = entry;
       $('cancelledContent').hidden = true;
       overlay.hidden = false;
-      document.body.classList.add('dialog-open');
+      lockInvite(true);
       $('thanksTitle').textContent = returning ? 'Sua confirmação está salva!' : 'Presença confirmada!';
       showThanks();
     }
@@ -423,7 +461,11 @@
         button.textContent = 'Não vou mais';
       }
     });
-    overlay.addEventListener('pointerdown', (event) => { if (event.target === overlay) hideDialog(); });
+    // NÃO fechar por toque no fundo: o teclado do Safari altera a área visível
+    // durante a transição e esse gesto fechava o formulário sem querer.
+    overlay.addEventListener('pointerdown', (event) => {
+      if (event.target === overlay) event.preventDefault();
+    });
     document.addEventListener('keydown', (event) => {
       if (overlay.hidden) return;
       if (event.key === 'Escape') hideDialog();
@@ -471,22 +513,39 @@
         : 'Agora escolha um alimento, além da sua bebida preferida no cooler. A confirmação só acontece depois desta etapa.';
       error.hidden = true;
     }
-    $('nextStep').addEventListener('click', () => {
-      if (submitBusy) return;
-      const fields = [$('guestName'),...companions.querySelectorAll('input')];
+    function advanceToFood() {
+      if (submitBusy || currentStep !== 1) return;
+      const fields = [$('guestName'), ...companions.querySelectorAll('input')];
       for (const field of fields) {
-        if (!field.checkValidity() || field.value.trim().replace(/\s+/g,' ').length < 2) {
-          if (field.value.trim().replace(/\s+/g,' ').length < 2) {
+        const name = field.value.trim().replace(/\s+/g, ' ');
+        if (!field.checkValidity() || name.length < 2) {
+          // Não reinicia nem apaga o formulário em caso de nome inválido.
+          if (name.length < 2) {
             field.setCustomValidity('Preencha este nome com pelo menos 2 caracteres.');
-            field.addEventListener('input', () => field.setCustomValidity(''),{once:true});
+            field.addEventListener('input', () => field.setCustomValidity(''), {once:true});
           }
-          field.reportValidity();field.focus();return;
+          field.reportValidity();
+          field.focus();
+          return;
         }
       }
-      const count=1+companions.querySelectorAll('input').length;
+      const count = fields.length;
       $('peopleReview').textContent = `${$('guestName').value.trim()}${count>1?` e mais ${count-1} acompanhante${count>2?'s':''}`:''} · ${count} pessoa${count>1?'s':''} · além da sua bebida preferida no cooler`;
       setStep(2);
-      $('stepFoodTitle').focus();
+      // Ao sair do teclado, não deixar o Safari rolar o convite de trás.
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      $('dialog').scrollTop = 0;
+      overlay.scrollTop = 0;
+      $('stepFoodTitle').focus({preventScroll:true});
+    }
+    $('nextStep').addEventListener('click', advanceToFood);
+    // No teclado do celular, "Ir"/Enter também deve avançar, nunca reiniciar o convite.
+    form.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' || event.isComposing || currentStep !== 1) return;
+      if (event.target === $('guestName') || companions.contains(event.target)) {
+        event.preventDefault();
+        advanceToFood();
+      }
     });
     $('backStep').addEventListener('click', () => {
       if (submitBusy) return;
@@ -575,7 +634,7 @@
       };
       addLine('Convidado: ', confirmedEntry.nome);
       if (confirmedEntry.guests.length) addLine('Acompanhantes: ', confirmedEntry.guests.join(', '));
-      if (confirmedEntry.alimento) addLine('Você vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)}`);
+      if (confirmedEntry.alimento) addLine('Você vai levar: ', `${confirmedEntry.alimento.nome} — ${displayQty(confirmedEntry.alimento.quantidade, confirmedEntry.alimento.unidade)} e sua bebida preferida no cooler.`);
       addLine('Data: ', 'Sábado, 17/10');
       addLine('Horário: ', '13 horas');
       addLine('Local: ', 'Av. São Paulo, 1374 — Jardim Indianópolis, Uberaba/MG');
@@ -631,7 +690,7 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (submitBusy) return;
-      if (currentStep !== 2) { setStep(1); return; }
+      if (currentStep !== 2) { advanceToFood(); return; }
       error.hidden = true;
       const name = $('guestName').value.trim().replace(/\s+/g, ' ');
       const guests = [...companions.querySelectorAll('input')].map(input => input.value.trim().replace(/\s+/g, ' '));
@@ -655,7 +714,8 @@
         });
         if (!data.ok) throw new Error('Não foi possível confirmar agora.');
         requestId = null;
-        form.reset(); companions.replaceChildren(); updateTotal(); setStep(1);
+        // Não reinicia o formulário ainda: isso ocorria antes do vídeo e parecia
+        // jogar o convidado de volta para o começo da confirmação.
         await showVideo({ nome: data.nome || name, guests: data.acompanhantes || guests, alimento: data.alimento });
       } catch (err) {
         const mensagem = mensagemFirebase(err, 'Falha ao registrar. Verifique sua conexão e tente novamente.');
