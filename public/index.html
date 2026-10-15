@@ -157,18 +157,20 @@
     }
 
 
-    /* Aviso discreto na área livre inferior do convite, sem modificar a arte. */
+    /* Aviso em letras grandes e maiúsculas, integrado à arte, sem etiqueta. */
     .cooler-notice {
       position: absolute; z-index: 2; top: 93%; left: 50%;
-      transform: translateX(-50%); width: max-content; max-width: 92%;
-      margin: 0; padding: 6px 12px;
-      border: 1px solid rgba(229, 195, 105, .65); border-radius: 999px;
-      background: rgba(255, 250, 229, .92); color: #185b35;
-      font-size: clamp(10px, 2.85vw, 13px); font-weight: 550;
-      line-height: 1.35; text-align: center; letter-spacing: -.012em;
-      white-space: nowrap; pointer-events: none;
-      box-shadow: 0 2px 7px rgba(68, 52, 20, .10);
+      transform: translateX(-50%); width: 94%;
+      margin: 0; padding: 0;
+      border: 0; border-radius: 0; background: transparent;
+      color: #096039; text-align: center;
+      font-size: clamp(15px, 4.35vw, 21px); font-weight: 750;
+      line-height: 1.16; letter-spacing: .018em;
+      white-space: normal; pointer-events: none;
+      text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 2px 4px rgba(255,255,255,.75);
     }
+    .cooler-notice span { display: block; }
+    @media(max-width: 355px) { .cooler-notice { font-size: 14.5px; } }
   </style>
 </head>
 <body>
@@ -182,7 +184,7 @@
         <img src="assets/atracoes-confirmadas.png" alt="Atrações confirmadas">
       </button>
     </div>
-    <p class="cooler-notice">🧊 Traga sua bebida preferida no cooler!</p>
+    <p class="cooler-notice"><span>TRAGA SUA BEBIDA PREFERIDA</span><span>NO COOLER!</span></p>
   </main>
   <div id="attractionsBackdrop" class="attractions-backdrop" hidden></div>
   <section id="attractionsPanel" class="attractions-panel" hidden aria-label="Bandas confirmadas">
@@ -463,7 +465,7 @@
       $('stepProgress').style.width = `${next * 50}%`;
       $('formLead').textContent = next === 1
         ? 'Primeiro, diga quem vai com você. Depois, escolha o que levar.'
-        : 'Agora escolha um alimento. A confirmação só acontece depois desta etapa.';
+        : 'Agora escolha um alimento, além da sua bebida preferida no cooler. A confirmação só acontece depois desta etapa.';
       error.hidden = true;
     }
     $('nextStep').addEventListener('click', () => {
@@ -479,7 +481,7 @@
         }
       }
       const count=1+companions.querySelectorAll('input').length;
-      $('peopleReview').textContent = `${$('guestName').value.trim()}${count>1?` e mais ${count-1} acompanhante${count>2?'s':''}`:''} · ${count} pessoa${count>1?'s':''}`;
+      $('peopleReview').textContent = `${$('guestName').value.trim()}${count>1?` e mais ${count-1} acompanhante${count>2?'s':''}`:''} · ${count} pessoa${count>1?'s':''} · além da sua bebida preferida no cooler`;
       setStep(2);
       $('stepFoodTitle').focus();
     });
